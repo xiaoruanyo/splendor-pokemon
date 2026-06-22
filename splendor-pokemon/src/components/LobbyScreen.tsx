@@ -22,7 +22,6 @@ export default function LobbyScreen({ user, onStartGame, onLogout, onBackToSolo 
   const [socket, setLocalSocket] = useState<Socket | null>(null);
   const [room, setRoom] = useState<RoomInfo | null>(null);
   const [roomList, setRoomList] = useState<RoomInfo[]>([]);
-  const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [showLeaderboard, setShowLeaderboard] = useState(false);

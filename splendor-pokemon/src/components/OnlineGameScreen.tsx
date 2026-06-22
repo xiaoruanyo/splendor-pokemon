@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { getSocket } from '../network/socket';
 import type { Socket } from 'socket.io-client';
-import type { TokenColor, PokemonCard, PlayerState } from '../types/game';
+import type { TokenColor, PokemonCard } from '../types/game';
 import { TOKEN_EMOJI, TOKEN_NAMES, TOKEN_IMG, TOKEN_COLORS, ALL_COLORS, MAX_RESERVED, WIN_SCORE, UI_ASSETS } from '../types/game';
 import { canAfford, calculatePayment } from '../engine/cards';
 import { getAvailableEvolutions } from '../engine/evolution';
@@ -351,7 +351,7 @@ export default function OnlineGameScreen({ initialGameState, onBackToLobby }: On
                 <span className="text-white">×{me.tokens[color]}</span>
               </span>
             ))}
-            <span className="text-xs text-gray-400 ml-2">({Object.values(me.tokens).reduce((a: number, b: number) => a + b, 0)}/10)</span>
+            <span className="text-xs text-gray-400 ml-2">({Object.values(me.tokens).reduce((a, b) => (a as number) + (b as number), 0)}/10)</span>
           </div>
 
           {/* Bonuses */}

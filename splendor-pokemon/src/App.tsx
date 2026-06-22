@@ -22,7 +22,7 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('home');
   const [user, setUser] = useState<{ id: string; username: string; avatar: string } | null>(null);
   const [onlineGameState, setOnlineGameState] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
 
   // Try to restore session on mount
   useEffect(() => {

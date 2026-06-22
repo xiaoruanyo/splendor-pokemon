@@ -529,33 +529,6 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
 
 // ============ Sub-components ============
 
-function OpponentPanel({ opp, isActive }: { opp: any; isActive: boolean }) {
-  return (
-    <div className={`rounded-xl p-2.5 text-sm transition-all ${
-      isActive ? 'bg-poke-gold/20 ring-1 ring-poke-gold/50' : 'bg-gray-800/40'
-    }`}>
-      <div className="flex items-center gap-2 mb-1">
-        <span className="text-lg">{opp.trainerEmoji}</span>
-        <div>
-          <div className="font-bold text-xs">{opp.name}</div>
-          <div className="text-poke-gold font-bold">{opp.score}分</div>
-        </div>
-      </div>
-      <div className="flex flex-wrap gap-0.5 text-xs">
-        {(['red','blue','black','pink','yellow'] as TokenColor[]).map(c => (
-          <span key={c} className="text-gray-500">
-            {TOKEN_EMOJI[c]}×{opp.tokens[c] || 0}
-          </span>
-        ))}
-        <span className="text-purple-400">{TOKEN_EMOJI.purple}×{opp.tokens.purple || 0}</span>
-      </div>
-      <div className="text-xs text-gray-500 mt-1">
-        🃏{opp.ownedCards.length}只 | 预留{opp.reservedCards.length}
-      </div>
-    </div>
-  );
-}
-
 function PokemonCardView({
   card, affordable, isSelected, onClick, onBuy, onReserve, isMyTurn, compact, reserved,
 }: {
