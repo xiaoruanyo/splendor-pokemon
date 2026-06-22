@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String
+  avatar       String   @default("🧢")
+  createdAt    DateTime @default(now())
+  lastLoginAt  DateTime?
+
+  stats          UserStats?
+  gameRecords    GameRecordPlayer[]
+  activationCode ActivationCode?
+}
+
+model ActivationCode {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  isUsed    Boolean  @default(false)
+  usedBy    String?  @unique
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [usedBy], references: [id])
+}
+
+model UserStats {
+  id           String @id @default(uuid())
+  userId       String @unique
+  totalGames   Int    @default(0)
+  wins         Int    @default(0)
+  losses       Int    @default(0)
+  highestScore Int    @default(0)
+  avgScore     Float  @default(0)
+  ratingElo    Int    @default(1000)
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model GameRecord {
+  id          String   @id @default(uuid())
+  mode        String
+  playerCount Int
+  winnerId    String?
+  finalScores String   // JSON string
+  createdAt   DateTime @default(now())
+
+  players GameRecordPlayer[]
+}
+
+model GameRecordPlayer {
+  id           String @id @default(uuid())
+  gameRecordId String
+  userId       String
+  score        Int
+  rank         Int
+
+  gameRecord GameRecord @relation(fields: [gameRecordId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id])
+}

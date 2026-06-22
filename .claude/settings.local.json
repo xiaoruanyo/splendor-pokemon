@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:euddedehi.blogspot.com)",
+      "WebFetch(domain:qiandao.com)",
+      "WebFetch(domain:www.asmodee.com.cn)"
+    ]
+  }
+}
