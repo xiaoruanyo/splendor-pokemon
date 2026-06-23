@@ -5,9 +5,10 @@ import GameScreen from './components/GameScreen';
 import LoginScreen from './components/LoginScreen';
 import LobbyScreen from './components/LobbyScreen';
 import OnlineGameScreen from './components/OnlineGameScreen';
+import AdminScreen from './components/AdminScreen';
 import { isLoggedIn, auth } from './network/api';
 
-type Screen = 'home' | 'login' | 'lobby' | 'game' | 'online_game';
+type Screen = 'home' | 'login' | 'lobby' | 'game' | 'online_game' | 'admin';
 
 export default function App() {
   const game = useGameStore(s => s.game);
@@ -126,6 +127,7 @@ export default function App() {
               setScreen('login');
             }
           }}
+          onEnterAdmin={() => setScreen('admin')}
         />
       )}
       {screen === 'login' && (
@@ -151,6 +153,9 @@ export default function App() {
           initialGameState={onlineGameState}
           onBackToLobby={handleBackFromOnlineGame}
         />
+      )}
+      {screen === 'admin' && (
+        <AdminScreen onBack={() => setScreen('home')} />
       )}
     </div>
   );

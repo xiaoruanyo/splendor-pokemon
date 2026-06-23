@@ -55,11 +55,28 @@ export const users = {
 
 // Admin
 export const admin = {
-  generateCodes: (count: number) =>
+  login: (password: string) =>
+    request('/admin/login', {
+      method: 'POST',
+      body: JSON.stringify({ password }),
+    }),
+
+  generateCodes: (count: number, adminToken: string) =>
     request('/admin/generate-codes', {
       method: 'POST',
+      headers: { Authorization: `Bearer ${adminToken}` },
       body: JSON.stringify({ count }),
     }),
+
+  getCodes: (adminToken: string, params?: { page?: number; filter?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.page) query.set('page', String(params.page));
+    if (params?.filter) query.set('filter', params.filter);
+    const qs = query.toString();
+    return request(`/admin/codes${qs ? '?' + qs : ''}`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+  },
 };
 
 // Token management

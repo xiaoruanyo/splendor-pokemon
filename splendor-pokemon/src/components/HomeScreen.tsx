@@ -7,9 +7,10 @@ import RulesModal from './RulesModal';
 interface HomeScreenProps {
   onStartSolo: () => void;
   onEnterOnline: () => void;
+  onEnterAdmin?: () => void;
 }
 
-export default function HomeScreen({ onStartSolo, onEnterOnline }: HomeScreenProps) {
+export default function HomeScreen({ onStartSolo, onEnterOnline, onEnterAdmin }: HomeScreenProps) {
   const startGame = useGameStore(s => s.startGame);
   const [mode, setMode] = useState<GameMode | null>(null);
   const [players, setPlayers] = useState<{
@@ -105,7 +106,19 @@ export default function HomeScreen({ onStartSolo, onEnterOnline }: HomeScreenPro
             <div className="text-sm opacity-80">与真实玩家联网对战</div>
           </button>
         </div>
-      ) : (
+      ) : null}
+
+      {/* Admin link */}
+      {onEnterAdmin && !mode && (
+        <button
+          onClick={onEnterAdmin}
+          className="mt-6 text-gray-600 hover:text-gray-400 text-xs transition-colors"
+        >
+          🔑 管理后台
+        </button>
+      )}
+
+      {!mode ? null : (
         <div className="w-full max-w-md space-y-5 animate-slide-up">
           <button onClick={() => setMode(null)} className="text-gray-400 hover:text-white mb-2">
             ← 返回选择模式
