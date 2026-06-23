@@ -6,3 +6,4 @@ dist/
 *.bak
 .DS_Store
 Thumbs.db
+DEPLOY.md
