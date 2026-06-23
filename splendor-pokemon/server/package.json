@@ -9,6 +9,8 @@
     "start": "node dist/index.js",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
+    "db:push:prod": "prisma db push --schema=./prisma/schema.prod.prisma",
+    "db:generate:prod": "prisma generate --schema=./prisma/schema.prod.prisma",
     "db:studio": "prisma studio",
     "generate-codes": "tsx scripts/generate-codes.ts"
   },
