@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { admin } from '../network/api';
 
 const ADMIN_TOKEN_KEY = 'admin_token';
@@ -39,10 +39,28 @@ export default function AdminScreen({ onBack }: { onBack: () => void }) {
   const [codePage, setCodePage] = useState(1);
   const [copiedAll, setCopiedAll] = useState(false);
 
-  // Auto-load codes on login
-  useEffect(() => {
-    if (adminToken) loadCodes();
-  }, [adminToken, codeFilter, codePage]);
+  const loadCodes = useCallback(async (token: string, page: number, filter: string) => {
+    setLoadingCodes(true);
+    try {
+      const data = await admin.getCodes(token, {
+        page,
+        filter: filter || undefined,
+      });
+      setCodesData(data);
+    } catch {
+      // Token expired — back to login
+      localStorage.removeItem(ADMIN_TOKEN_KEY);
+      setAdminToken(null);
+      setCodesData(null);
+    } finally {
+      setLoadingCodes(false);
+    }
+  }, []);
+
+  const doLogin = async (token: string) => {
+    setAdminToken(token);
+    await loadCodes(token, 1, '');
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +69,7 @@ export default function AdminScreen({ onBack }: { onBack: () => void }) {
     try {
       const result = await admin.login(password);
       localStorage.setItem(ADMIN_TOKEN_KEY, result.token);
-      setAdminToken(result.token);
+      await doLogin(result.token);
     } catch (err: any) {
       setLoginError(err.message);
     } finally {
@@ -74,7 +92,7 @@ export default function AdminScreen({ onBack }: { onBack: () => void }) {
     try {
       const result = await admin.generateCodes(genCount, adminToken);
       setNewCodes(result.codes);
-      loadCodes(); // refresh list
+      await loadCodes(adminToken, codePage, codeFilter);
     } catch (err: any) {
       setGenError(err.message);
     } finally {
@@ -82,22 +100,15 @@ export default function AdminScreen({ onBack }: { onBack: () => void }) {
     }
   };
 
-  const loadCodes = async () => {
-    if (!adminToken) return;
-    setLoadingCodes(true);
-    try {
-      const data = await admin.getCodes(adminToken, {
-        page: codePage,
-        filter: codeFilter || undefined,
-      });
-      setCodesData(data);
-    } catch {
-      // Token expired
-      localStorage.removeItem(ADMIN_TOKEN_KEY);
-      setAdminToken(null);
-    } finally {
-      setLoadingCodes(false);
-    }
+  const handleFilterChange = (filter: string) => {
+    setCodeFilter(filter);
+    setCodePage(1);
+    if (adminToken) loadCodes(adminToken, 1, filter);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCodePage(page);
+    if (adminToken) loadCodes(adminToken, page, codeFilter);
   };
 
   const copyAllCodes = () => {
@@ -118,12 +129,12 @@ export default function AdminScreen({ onBack }: { onBack: () => void }) {
   // Login screen
   if (!adminToken) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gray-950">
-        <div className="w-full max-w-sm bg-gray-900 rounded-2xl p-6 shadow-2xl border border-gray-700">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-poke-dark">
+        <div className="w-full max-w-sm bg-gray-800/60 rounded-2xl p-6 shadow-2xl border border-gray-700">
           <div className="text-center mb-6">
             <span className="text-4xl">🔑</span>
             <h1 className="text-white font-extrabold text-xl mt-2">管理后台</h1>
-            <p className="text-gray-500 text-sm mt-1">请输入管理员密码</p>
+            <p className="text-gray-400 text-sm mt-1">请输入管理员密码</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
@@ -132,7 +143,7 @@ export default function AdminScreen({ onBack }: { onBack: () => void }) {
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder="管理员密码"
-              className="w-full bg-gray-800 text-white rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-poke-gold"
+              className="w-full bg-gray-700 text-white rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-poke-gold"
               autoFocus
             />
             {loginError && (
@@ -159,7 +170,7 @@ export default function AdminScreen({ onBack }: { onBack: () => void }) {
 
   // Admin panel
   return (
-    <div className="min-h-screen bg-gray-950 p-4">
+    <div className="min-h-screen bg-poke-dark p-4">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -179,7 +190,7 @@ export default function AdminScreen({ onBack }: { onBack: () => void }) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Left: Generate codes */}
-          <div className="bg-gray-900 rounded-2xl p-5 border border-gray-700">
+          <div className="bg-gray-800/60 rounded-2xl p-5 border border-gray-700">
             <h2 className="text-white font-bold mb-4">🎫 生成邀请码</h2>
             <div className="flex gap-3 mb-3">
               <input
@@ -188,7 +199,7 @@ export default function AdminScreen({ onBack }: { onBack: () => void }) {
                 onChange={e => setGenCount(Math.max(1, Math.min(100, parseInt(e.target.value) || 1)))}
                 min={1}
                 max={100}
-                className="w-24 bg-gray-800 text-white rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-poke-gold text-center"
+                className="w-24 bg-gray-700 text-white rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-poke-gold text-center"
               />
               <button
                 onClick={handleGenerate}
@@ -214,16 +225,16 @@ export default function AdminScreen({ onBack }: { onBack: () => void }) {
                     {copiedAll ? '✓ 已复制' : '📋 一键复制全部'}
                   </button>
                 </div>
-                <div className="bg-gray-800 rounded-xl p-3 max-h-48 overflow-y-auto space-y-1">
+                <div className="bg-gray-700/50 rounded-xl p-3 max-h-48 overflow-y-auto space-y-1">
                   {newCodes.map((code, i) => (
                     <div
                       key={i}
                       onClick={() => copyCode(code)}
-                      className="text-sm text-green-400 font-mono cursor-pointer hover:bg-gray-700 px-2 py-1 rounded transition-all flex items-center justify-between group"
+                      className="text-sm text-green-400 font-mono cursor-pointer hover:bg-gray-600 px-2 py-1 rounded transition-all flex items-center justify-between group"
                       title="点击复制"
                     >
                       <span>{code}</span>
-                      <span className="text-gray-600 text-xs opacity-0 group-hover:opacity-100">复制</span>
+                      <span className="text-gray-500 text-xs opacity-0 group-hover:opacity-100">复制</span>
                     </div>
                   ))}
                 </div>
@@ -232,11 +243,11 @@ export default function AdminScreen({ onBack }: { onBack: () => void }) {
           </div>
 
           {/* Right: Stats */}
-          <div className="bg-gray-900 rounded-2xl p-5 border border-gray-700">
+          <div className="bg-gray-800/60 rounded-2xl p-5 border border-gray-700">
             <h2 className="text-white font-bold mb-4">📊 统计</h2>
             {codesData ? (
               <div className="grid grid-cols-3 gap-3">
-                <div className="bg-gray-800 rounded-xl p-4 text-center">
+                <div className="bg-gray-700/50 rounded-xl p-4 text-center">
                   <div className="text-2xl font-extrabold text-white">{codesData.stats.total}</div>
                   <div className="text-xs text-gray-400 mt-1">总计</div>
                 </div>
@@ -244,7 +255,7 @@ export default function AdminScreen({ onBack }: { onBack: () => void }) {
                   <div className="text-2xl font-extrabold text-green-400">{codesData.stats.totalUnused}</div>
                   <div className="text-xs text-gray-400 mt-1">可用</div>
                 </div>
-                <div className="bg-gray-800 rounded-xl p-4 text-center">
+                <div className="bg-gray-700/50 rounded-xl p-4 text-center">
                   <div className="text-2xl font-extrabold text-gray-300">{codesData.stats.totalUsed}</div>
                   <div className="text-xs text-gray-400 mt-1">已使用</div>
                 </div>
@@ -256,16 +267,16 @@ export default function AdminScreen({ onBack }: { onBack: () => void }) {
         </div>
 
         {/* Code list */}
-        <div className="mt-4 bg-gray-900 rounded-2xl p-5 border border-gray-700">
+        <div className="mt-4 bg-gray-800/60 rounded-2xl p-5 border border-gray-700">
           <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
             <h2 className="text-white font-bold">📋 邀请码列表</h2>
             <div className="flex gap-2">
               {['', 'unused', 'used'].map(f => (
                 <button
                   key={f}
-                  onClick={() => { setCodeFilter(f); setCodePage(1); }}
+                  onClick={() => handleFilterChange(f)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                    codeFilter === f ? 'bg-poke-gold text-poke-dark' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                    codeFilter === f ? 'bg-poke-gold text-poke-dark' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
                   }`}
                 >
                   {f === '' ? '全部' : f === 'unused' ? '可用' : '已使用'}
@@ -276,14 +287,14 @@ export default function AdminScreen({ onBack }: { onBack: () => void }) {
 
           {loadingCodes ? (
             <div className="text-gray-500 text-sm text-center py-8 animate-pulse">加载中...</div>
-          ) : codesData && codesData.codes.length === 0 ? (
+          ) : !codesData || codesData.codes.length === 0 ? (
             <div className="text-gray-500 text-sm text-center py-8">暂无数据</div>
           ) : (
             <>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-gray-500 text-xs border-b border-gray-800">
+                    <tr className="text-gray-500 text-xs border-b border-gray-700">
                       <th className="text-left py-2 px-2 font-medium">邀请码</th>
                       <th className="text-center py-2 px-2 font-medium">状态</th>
                       <th className="text-left py-2 px-2 font-medium">使用者</th>
@@ -292,8 +303,8 @@ export default function AdminScreen({ onBack }: { onBack: () => void }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {codesData!.codes.map(c => (
-                      <tr key={c.id} className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors">
+                    {codesData.codes.map(c => (
+                      <tr key={c.id} className="border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors">
                         <td className="py-2 px-2">
                           <span
                             className="font-mono text-green-400 cursor-pointer hover:text-green-300"
@@ -320,22 +331,22 @@ export default function AdminScreen({ onBack }: { onBack: () => void }) {
               </div>
 
               {/* Pagination */}
-              {codesData && codesData.pagination.totalPages > 1 && (
+              {codesData.pagination.totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2 mt-4">
                   <button
-                    onClick={() => setCodePage(p => Math.max(1, p - 1))}
+                    onClick={() => handlePageChange(Math.max(1, codePage - 1))}
                     disabled={codePage <= 1}
-                    className="px-3 py-1.5 rounded-lg bg-gray-800 text-gray-400 text-xs hover:bg-gray-700 disabled:opacity-30 transition-all"
+                    className="px-3 py-1.5 rounded-lg bg-gray-700 text-gray-400 text-xs hover:bg-gray-600 disabled:opacity-30 transition-all"
                   >
                     ← 上一页
                   </button>
-                  <span className="text-xs text-gray-500">
-                    {codesData.pagination.page} / {codesData.pagination.totalPages}
+                  <span className="text-xs text-gray-400">
+                    {codePage} / {codesData.pagination.totalPages}
                   </span>
                   <button
-                    onClick={() => setCodePage(p => Math.min(codesData.pagination.totalPages, p + 1))}
+                    onClick={() => handlePageChange(Math.min(codesData.pagination.totalPages, codePage + 1))}
                     disabled={codePage >= codesData.pagination.totalPages}
-                    className="px-3 py-1.5 rounded-lg bg-gray-800 text-gray-400 text-xs hover:bg-gray-700 disabled:opacity-30 transition-all"
+                    className="px-3 py-1.5 rounded-lg bg-gray-700 text-gray-400 text-xs hover:bg-gray-600 disabled:opacity-30 transition-all"
                   >
                     下一页 →
                   </button>

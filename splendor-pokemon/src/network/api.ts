@@ -9,11 +9,15 @@ export function getToken(): string | null {
 
 async function request(path: string, options: RequestInit = {}): Promise<any> {
   const token = getToken();
+  const explicitHeaders = (options.headers as Record<string, string> || {});
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string> || {}),
+    ...explicitHeaders,
   };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
+  // Only use user token if no Authorization header was explicitly passed
+  if (token && !explicitHeaders['Authorization']) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
 
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
   const data = await res.json();
