@@ -75,6 +75,11 @@ export default function App() {
     setScreen('lobby');
   }, []);
 
+  // Handle avatar change
+  const handleAvatarChange = useCallback((newAvatar: string) => {
+    setUser(prev => prev ? { ...prev, avatar: newAvatar } : null);
+  }, []);
+
   // Handle logout
   const handleLogout = useCallback(() => {
     setUser(null);
@@ -135,6 +140,7 @@ export default function App() {
           onStartGame={handleOnlineGameStart}
           onLogout={handleLogout}
           onBackToSolo={() => setScreen('home')}
+          onAvatarChange={handleAvatarChange}
         />
       )}
       {screen === 'game' && game && (

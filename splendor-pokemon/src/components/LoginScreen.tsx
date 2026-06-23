@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { auth, setToken } from '../network/api';
+import { auth, setToken, PRESET_AVATARS } from '../network/api';
 import { UI_ASSETS } from '../types/game';
 
 interface LoginScreenProps {
@@ -12,6 +12,7 @@ export default function LoginScreen({ onLogin, onBack }: LoginScreenProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [activationCode, setActivationCode] = useState('');
+  const [selectedAvatar, setSelectedAvatar] = useState('🧢');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -25,7 +26,7 @@ export default function LoginScreen({ onLogin, onBack }: LoginScreenProps) {
       if (mode === 'login') {
         result = await auth.login(username, password);
       } else {
-        result = await auth.register(username, password, activationCode);
+        result = await auth.register(username, password, activationCode, selectedAvatar);
       }
       setToken(result.token);
       onLogin(result.user);
@@ -106,6 +107,28 @@ export default function LoginScreen({ onLogin, onBack }: LoginScreenProps) {
                 required
               />
               <p className="text-xs text-gray-500 mt-1">需要有效的激活码才能注册</p>
+            </div>
+          )}
+
+          {mode === 'register' && (
+            <div>
+              <label className="text-xs text-gray-400 block mb-2">选择头像</label>
+              <div className="grid grid-cols-6 gap-2">
+                {PRESET_AVATARS.map(emoji => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => setSelectedAvatar(emoji)}
+                    className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center transition-all ${
+                      selectedAvatar === emoji
+                        ? 'bg-poke-gold/20 ring-2 ring-poke-gold scale-110'
+                        : 'bg-gray-700/50 hover:bg-gray-600'
+                    }`}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 

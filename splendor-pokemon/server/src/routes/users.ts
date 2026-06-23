@@ -30,6 +30,52 @@ router.get('/leaderboard', async (_req: Request, res: Response) => {
   }
 });
 
+// GET /api/users/me/history - 当前用户的游戏历史 (must be before /:id)
+router.get('/me/history', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+
+    const records = await prisma.gameRecord.findMany({
+      where: {
+        players: { some: { userId } },
+      },
+      include: {
+        players: {
+          include: { user: { select: { username: true, avatar: true } } },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+
+    const history = records.map((r: any) => {
+      const myPlayer = r.players.find((p: any) => p.userId === userId);
+      return {
+        id: r.id,
+        mode: r.mode,
+        playerCount: r.playerCount,
+        createdAt: r.createdAt,
+        players: r.players.map((p: any) => ({
+          userId: p.userId,
+          username: p.user?.username || '未知',
+          avatar: p.user?.avatar || '🧢',
+          score: p.score,
+          rank: p.rank,
+        })),
+        myResult: myPlayer ? {
+          score: myPlayer.score,
+          rank: myPlayer.rank,
+          isWin: myPlayer.rank === 1,
+        } : null,
+      };
+    });
+
+    res.json({ history });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/users/:id - 用户公开资料
 router.get('/:id', async (req: Request, res: Response) => {
   try {

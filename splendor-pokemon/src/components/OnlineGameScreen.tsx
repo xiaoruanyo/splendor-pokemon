@@ -6,6 +6,7 @@ import { TOKEN_EMOJI, TOKEN_NAMES, TOKEN_IMG, TOKEN_COLORS, ALL_COLORS, MAX_RESE
 import { canAfford, calculatePayment } from '../engine/cards';
 import { getAvailableEvolutions } from '../engine/evolution';
 import GameOverModal from './GameOverModal';
+import RulesModal from './RulesModal';
 
 interface OnlineGameScreenProps {
   initialGameState: any;
@@ -23,6 +24,7 @@ export default function OnlineGameScreen({ initialGameState, onBackToLobby }: On
   const [actionMode, setActionMode] = useState<string>('none');
   const [showReserveDeck, setShowReserveDeck] = useState(false);
   const [showEvolvePanel, setShowEvolvePanel] = useState(false);
+  const [showRules, setShowRules] = useState(false);
   const [evolutionOptions, setEvolutionOptions] = useState<any[]>([]);
   const [myId, setMyId] = useState('');
   const [turnPopup, setTurnPopup] = useState<{ show: boolean; name: string; avatar: string }>({ show: false, name: '', avatar: '' });
@@ -194,8 +196,17 @@ export default function OnlineGameScreen({ initialGameState, onBackToLobby }: On
             当前: {currentPlayer?.avatar} {currentPlayer?.name}
           </div>
         </div>
-        <div className="text-xs text-gray-400">
-          {game.lastRoundTriggered ? '⚠ 最后一轮' : `目标: ${WIN_SCORE}分`}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowRules(true)}
+            className="text-gray-400 hover:text-white text-sm px-2 py-1 rounded-lg hover:bg-gray-700/50 transition-all"
+            title="查看规则"
+          >
+            📖 规则
+          </button>
+          <span className="text-xs text-gray-400">
+            {game.lastRoundTriggered ? '⚠ 最后一轮' : `目标: ${WIN_SCORE}分`}
+          </span>
         </div>
       </div>
 
@@ -351,7 +362,7 @@ export default function OnlineGameScreen({ initialGameState, onBackToLobby }: On
                 <span className="text-white">×{me.tokens[color]}</span>
               </span>
             ))}
-            <span className="text-xs text-gray-400 ml-2">({Object.values(me.tokens).reduce((a, b) => (a as number) + (b as number), 0)}/10)</span>
+            <span className="text-xs text-gray-400 ml-2">({(Object.values(me.tokens) as number[]).reduce((a, b) => a + b, 0)}/10)</span>
           </div>
 
           {/* Bonuses */}
@@ -479,6 +490,9 @@ export default function OnlineGameScreen({ initialGameState, onBackToLobby }: On
           </div>
         </div>
       )}
+
+      {/* Rules Modal */}
+      {showRules && <RulesModal onClose={() => setShowRules(false)} />}
 
       {gameOver && game.phase === 'finished' && <GameOverModal onBackToMenu={onBackToLobby} />}
     </div>

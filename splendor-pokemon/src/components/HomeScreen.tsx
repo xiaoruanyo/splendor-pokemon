@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { TRAINERS, UI_ASSETS } from '../types/game';
 import type { GameMode, AIDifficulty } from '../types/game';
+import RulesModal from './RulesModal';
 
 interface HomeScreenProps {
   onStartSolo: () => void;
@@ -17,6 +18,7 @@ export default function HomeScreen({ onStartSolo, onEnterOnline }: HomeScreenPro
     { name: '你', trainer: 'ash', trainerEmoji: '🧢', isAI: false },
     { name: 'AI对手', trainer: 'misty', trainerEmoji: '💧', isAI: true, aiDifficulty: 'medium' },
   ]);
+  const [showRules, setShowRules] = useState(false);
   const [aiDifficulty, setAiDifficulty] = useState<AIDifficulty>('medium');
 
   const handleStart = () => {
@@ -191,8 +193,19 @@ export default function HomeScreen({ onStartSolo, onEnterOnline }: HomeScreenPro
           >
             ⚡ 开始游戏！
           </button>
+
+          {/* Rules button */}
+          <button
+            onClick={() => setShowRules(true)}
+            className="w-full py-3 rounded-xl bg-gray-700/50 text-gray-300 font-bold text-sm hover:bg-gray-600/50 transition-all border border-gray-600/30"
+          >
+            📖 查看游戏规则
+          </button>
         </div>
       )}
+
+      {/* Rules Modal */}
+      {showRules && <RulesModal onClose={() => setShowRules(false)} />}
     </div>
   );
 }

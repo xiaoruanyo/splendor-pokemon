@@ -6,6 +6,7 @@ import { getAvailableEvolutions } from '../engine/evolution';
 import { getCurrentPlayer } from '../engine/game';
 import { useState, useEffect, useRef } from 'react';
 import GameOverModal from './GameOverModal';
+import RulesModal from './RulesModal';
 
 export default function GameScreen({ onBack }: { onBack: () => void }) {
   const game = useGameStore(s => s.game);
@@ -31,6 +32,7 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
 
   const [showReserveDeck, setShowReserveDeck] = useState(false);
   const [showEvolvePanel, setShowEvolvePanel] = useState(false);
+  const [showRules, setShowRules] = useState(false);
   const [turnPopup, setTurnPopup] = useState<{ show: boolean; name: string; trainerEmoji: string }>({ show: false, name: '', trainerEmoji: '' });
   const [expandedOpponent, setExpandedOpponent] = useState<string | null>(null);
   const prevTurnRef = useRef(-1);
@@ -134,8 +136,17 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
             {isAIThinking && <span className="ml-2 animate-pulse">🤔 思考中...</span>}
           </div>
         </div>
-        <div className="text-xs text-gray-400">
-          {game.lastRoundTriggered ? '⚠ 最后一轮' : `目标: ${WIN_SCORE}分`}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowRules(true)}
+            className="text-gray-400 hover:text-white text-sm px-2 py-1 rounded-lg hover:bg-gray-700/50 transition-all"
+            title="查看规则"
+          >
+            📖 规则
+          </button>
+          <span className="text-xs text-gray-400">
+            {game.lastRoundTriggered ? '⚠ 最后一轮' : `目标: ${WIN_SCORE}分`}
+          </span>
         </div>
       </div>
 
@@ -520,6 +531,9 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
           )}
         </div>
       </div>
+
+      {/* Rules Modal */}
+      {showRules && <RulesModal onClose={() => setShowRules(false)} />}
 
       {/* Game Over Modal */}
       {gameOver && game.phase === 'finished' && <GameOverModal onBackToMenu={onBack} />}

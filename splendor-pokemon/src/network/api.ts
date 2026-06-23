@@ -1,5 +1,8 @@
 const API_BASE = '/api';
 
+// 预设头像列表（与后端保持一致）
+export const PRESET_AVATARS = ['🧢', '💧', '🪨', '🚀', '🎩', '🎀', '👒', '🔥', '⚡', '🌿', '👻'];
+
 export function getToken(): string | null {
   return localStorage.getItem('token');
 }
@@ -45,6 +48,9 @@ export const users = {
       method: 'PUT',
       body: JSON.stringify({ avatar }),
     }),
+
+  // 获取个人对战历史
+  getHistory: () => request('/users/me/history'),
 };
 
 // Admin

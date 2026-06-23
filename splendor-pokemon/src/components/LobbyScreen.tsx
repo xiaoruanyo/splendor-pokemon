@@ -2,12 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { connectSocket, getSocket, disconnectSocket } from '../network/socket';
 import { users, clearToken } from '../network/api';
 import type { Socket } from 'socket.io-client';
+import ProfileModal from './ProfileModal';
 
 interface LobbyScreenProps {
   user: { id: string; username: string; avatar: string };
   onStartGame: (gameState: any) => void;
   onLogout: () => void;
   onBackToSolo: () => void;
+  onAvatarChange?: (avatar: string) => void;
 }
 
 interface RoomInfo {
@@ -18,13 +20,14 @@ interface RoomInfo {
   status: string;
 }
 
-export default function LobbyScreen({ user, onStartGame, onLogout, onBackToSolo }: LobbyScreenProps) {
+export default function LobbyScreen({ user, onStartGame, onLogout, onBackToSolo, onAvatarChange }: LobbyScreenProps) {
   const [socket, setLocalSocket] = useState<Socket | null>(null);
   const [room, setRoom] = useState<RoomInfo | null>(null);
   const [roomList, setRoomList] = useState<RoomInfo[]>([]);
   const [error, setError] = useState('');
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   // Connect socket on mount
   useEffect(() => {
@@ -225,6 +228,9 @@ export default function LobbyScreen({ user, onStartGame, onLogout, onBackToSolo 
             <button onClick={() => setShowLeaderboard(!showLeaderboard)} className="px-3 py-2 rounded-xl bg-gray-700 text-white text-xs hover:bg-gray-600 transition-all">
               🏆 排行
             </button>
+            <button onClick={() => setShowProfile(true)} className="px-3 py-2 rounded-xl bg-gray-700 text-white text-xs hover:bg-gray-600 transition-all">
+              📊 战绩
+            </button>
             <button onClick={onBackToSolo} className="px-3 py-2 rounded-xl bg-blue-600/50 text-white text-xs hover:bg-blue-600 transition-all">
               🤖 单人
             </button>
@@ -307,6 +313,19 @@ export default function LobbyScreen({ user, onStartGame, onLogout, onBackToSolo 
           )}
         </div>
       </div>
+
+      {/* Profile Modal */}
+      {showProfile && (
+        <ProfileModal
+          userId={user.id}
+          currentAvatar={user.avatar}
+          username={user.username}
+          onAvatarChange={(newAvatar) => {
+            onAvatarChange?.(newAvatar);
+          }}
+          onClose={() => setShowProfile(false)}
+        />
+      )}
     </div>
   );
 }
