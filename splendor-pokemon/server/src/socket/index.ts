@@ -8,7 +8,12 @@ import { registerGameHandlers } from './game.js';
 export function createSocketServer(httpServer: HttpServer): Server {
   const io = new Server(httpServer, {
     cors: {
-      origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+      origin: [
+        'http://localhost:5173',
+        'http://127.0.0.1:5173',
+        'https://hellorxy.top',
+        'http://hellorxy.top',
+      ],
       methods: ['GET', 'POST'],
     },
   });
