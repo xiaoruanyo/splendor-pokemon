@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { TRAINERS, UI_ASSETS } from '../types/game';
+import { TRAINERS } from '../types/game';
 import type { GameMode, AIDifficulty } from '../types/game';
 import RulesModal from './RulesModal';
 
@@ -55,20 +55,22 @@ export default function HomeScreen({ onStartSolo, onEnterOnline, onEnterAdmin }:
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4" style={{
-      background: `linear-gradient(rgba(10,10,30,0.35), rgba(10,10,30,0.50)), url(${UI_ASSETS.homeBg}) center/cover no-repeat`,
-    }}>
+    <div className="home-screen min-h-screen flex flex-col items-center justify-center">
       {/* Title */}
-      <div className="text-center mb-8">
-        <img src={UI_ASSETS.logo} alt="璀璨宝石：宝可梦" className="h-16 md:h-20 mx-auto mb-4 drop-shadow-lg" />
-        <p className="text-gray-400 text-sm md:text-base">
-          Splendor: Pokémon Edition
-        </p>
+      <div className="home-title">
+        <div className="home-eyebrow">SPLENDOR · POKÉMON EDITION</div>
+        <h1>璀璨宝石 <span>宝可梦</span></h1>
+        <p>从一枚精灵球开始，组建你的冠军队伍。</p>
+        <div className="home-pokemon" aria-hidden="true">
+          <img src="/assets/pokemon/1.png" alt="" />
+          <img src="/assets/pokemon/25.png" alt="" />
+          <img src="/assets/pokemon/4.png" alt="" />
+        </div>
       </div>
 
       {/* Mode Selection */}
       {!mode ? (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-lg">
+        <div className="mode-grid">
           <button
             onClick={() => {
               setMode('solo');
@@ -119,7 +121,7 @@ export default function HomeScreen({ onStartSolo, onEnterOnline, onEnterAdmin }:
       )}
 
       {!mode ? null : (
-        <div className="w-full max-w-md space-y-5 animate-slide-up">
+        <div className="home-setup w-full max-w-md space-y-5 animate-slide-up">
           <button onClick={() => setMode(null)} className="text-gray-400 hover:text-white mb-2">
             ← 返回选择模式
           </button>

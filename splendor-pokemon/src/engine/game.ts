@@ -1,3 +1,4 @@
+import { validateReserve } from './validator';
 import type {
   GameState, PlayerState, BoardState, PokemonCard, TokenColor,
   CardLevel, GameMode, AIDifficulty,
@@ -178,6 +179,12 @@ export function reserveCard(
   level?: CardLevel,
 ): ActionResult {
   const player = game.players.find(p => p.id === playerId)!;
+  const target = source === 'board' ? [
+    ...game.board.revealed[1], ...game.board.revealed[2], ...game.board.revealed[3],
+    game.board.rareRevealed, game.board.legendaryRevealed,
+  ].find(candidate => candidate?.id === cardId) : undefined;
+  const reserveError = validateReserve(game, player, source, target ?? undefined, level);
+  if (reserveError) return { success: false, message: reserveError, game };
   let card: PokemonCard;
 
   if (source === 'board' && cardId) {

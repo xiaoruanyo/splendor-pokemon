@@ -26,12 +26,12 @@ export const TOKEN_EMOJI: Record<TokenColor, string> = {
 };
 
 export const TOKEN_IMG: Record<TokenColor, string> = {
-  red: '/assets/ui/token-red.png',
-  blue: '/assets/ui/token-blue.png',
-  black: '/assets/ui/token-black.png',
-  pink: '/assets/ui/token-pink.png',
-  yellow: '/assets/ui/token-yellow.png',
-  purple: '/assets/ui/token-purple.png',
+  red: '/assets/ui/token-red.svg',
+  blue: '/assets/ui/token-blue.svg',
+  black: '/assets/ui/token-black.svg',
+  pink: '/assets/ui/token-pink.svg',
+  yellow: '/assets/ui/token-yellow.svg',
+  purple: '/assets/ui/token-purple.svg',
 };
 
 export const UI_ASSETS = {

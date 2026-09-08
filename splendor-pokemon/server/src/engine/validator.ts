@@ -48,7 +48,7 @@ export function validateBuyCard(
   const cost = { ...card.cost };
   for (const c of TOKEN_COLORS) cost[c] = Math.max(0, cost[c] - (player.bonuses[c] || 0));
 
-  let totalPaid = 0, totalCost = 0;
+  let totalPaid = 0, totalCost = cost.purple || 0;
   for (const c of TOKEN_COLORS) { totalPaid += (payment[c] || 0); totalCost += cost[c]; }
   totalPaid += (payment.purple || 0);
   if (totalPaid !== totalCost) return '支付金额不匹配';
@@ -60,6 +60,10 @@ export function validateReserve(
   game: GameState, player: PlayerState,
   source: 'board' | 'deck', card?: PokemonCard, level?: CardLevel
 ): string | null {
+  if ((source === 'board' && (card?.level === 'rare' || card?.level === 'legendary')) ||
+      (source === 'deck' && level !== undefined && level !== 1 && level !== 2 && level !== 3)) {
+    return '稀有、传说／幻之宝可梦不能保留';
+  }
   if (player.reservedCards.length >= MAX_RESERVED) return '保留区已满';
   if (source === 'board' && !card) return '请选择卡牌';
   if (source === 'deck' && !level) return '请选择牌堆';

@@ -32,7 +32,7 @@ export function canAfford(
   bonuses: Record<string, number>
 ): { affordable: boolean; shortage: number; cost: TokenCost } {
   const cost = calculateCost(card, bonuses);
-  let wildNeeded = 0;
+  let wildNeeded = cost.purple || 0;
   for (const color of ['red', 'blue', 'black', 'pink', 'yellow'] as const) {
     const s = Math.max(0, cost[color] - (tokens[color] || 0));
     wildNeeded += s;
@@ -57,7 +57,7 @@ export function calculatePayment(
   }
 
   // Fill remaining with purple (master ball)
-  let remaining = 0;
+  let remaining = cost.purple || 0;
   for (const color of ['red', 'blue', 'black', 'pink', 'yellow'] as const) {
     remaining += cost[color] - payment[color];
   }

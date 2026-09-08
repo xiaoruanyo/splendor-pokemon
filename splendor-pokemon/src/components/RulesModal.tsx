@@ -88,8 +88,9 @@ export default function RulesModal({ onClose }: RulesModalProps) {
               <div className="bg-gray-800/60 rounded-xl p-3">
                 <div className="font-bold text-white mb-1">③ 保留卡牌（预约）</div>
                 <div className="text-gray-400 text-xs space-y-1">
-                  <p>从场上选 1 张牌，或从牌堆顶部暗抽 1 张保留到手</p>
+                  <p>从场上选 1 张普通牌，或从 Lv.1–3 牌堆顶部暗抽 1 张保留到手</p>
                   <p>同时获得 <strong className="text-purple-400">1 枚大师球</strong></p>
+                  <p><strong>稀有、传说／幻之宝可梦不能保留。</strong>大师球是保留普通牌时获得的奖励。</p>
                   <p>保留上限 <strong className="text-white">{MAX_RESERVED} 张</strong>，超出不可再保留</p>
                 </div>
               </div>
@@ -99,6 +100,7 @@ export default function RulesModal({ onClose }: RulesModalProps) {
                 <div className="text-gray-400 text-xs space-y-1">
                   <p><strong className="text-purple-300">不用付费！</strong>满足进化条件即可将高阶宝可梦覆盖到低阶宝可梦上</p>
                   <p>需要有<strong>基础形态的宝可梦</strong>，且进化形态在场上或保留区中</p>
+                  <p>需要的球种和数量指<strong>已捕获卡牌的永久奖励</strong>，不是手中的精灵球；进化不消耗球。</p>
                   <p>每回合最多进化 <strong>1 只</strong></p>
                   <p className="text-gray-500">进化链示例：小火龙 → 火恐龙 → 喷火龙</p>
                 </div>

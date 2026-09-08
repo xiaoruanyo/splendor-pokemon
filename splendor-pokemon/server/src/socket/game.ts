@@ -101,7 +101,8 @@ export function registerGameHandlers(io: Server, socket: Socket): void {
         }
         case 'reserve_board': {
           if (!action.cardId) { callback?.({ error: '请选择卡牌' }); return; }
-          const err = validateReserve(game, player, 'board');
+          const card = [...game.board.revealed[1], ...game.board.revealed[2], ...game.board.revealed[3], game.board.rareRevealed, game.board.legendaryRevealed].find(c => c?.id === action.cardId);
+          const err = validateReserve(game, player, 'board', card ?? undefined);
           if (err) { callback?.({ error: err }); return; }
           result = reserveCard(game, player.id, 'board', action.cardId);
           break;

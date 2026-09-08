@@ -1,3 +1,5 @@
+import EvolutionRequirement from './EvolutionRequirement';
+import PokemonCardView from './PokemonCardView';
 import { useGameStore } from '../store/gameStore';
 import { TOKEN_COLORS, TOKEN_EMOJI, TOKEN_NAMES, TOKEN_IMG, ALL_COLORS, MAX_RESERVED, WIN_SCORE, UI_ASSETS } from '../types/game';
 import type { TokenColor, PokemonCard, PlayerState } from '../types/game';
@@ -50,8 +52,9 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
 
   if (!game) return null;
 
-  const player = getCurrentPlayer(game);
-  const isMyTurn = !player.isAI;
+  const currentPlayer = getCurrentPlayer(game);
+  const player = game.mode === 'solo' ? game.players.find(p => !p.isAI)! : currentPlayer;
+  const isMyTurn = !currentPlayer.isAI;
 
   // Compute affordable cards
   const getCardAffordable = (card: PokemonCard) => {
@@ -109,13 +112,10 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
   const tokenEmoji = (color: TokenColor) => TOKEN_EMOJI[color] || '⚪';
 
   return (
-    <div className="min-h-screen flex flex-col text-white" style={{
-      background: `linear-gradient(rgba(10,10,30,0.35), rgba(10,10,30,0.50)), url(${UI_ASSETS.boardBg}) center/cover no-repeat`,
-      backgroundAttachment: 'fixed',
-    }}>
+    <div className="game-table">
       {/* Turn Popup Overlay */}
       {turnPopup.show && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 animate-fade-in pointer-events-none">
+        <div className="turn-toast animate-fade-in pointer-events-none">
           <div className="bg-gray-900/90 rounded-3xl px-10 py-8 shadow-2xl border border-poke-gold/40 animate-scale-in text-center">
             <div className="text-6xl mb-4">{turnPopup.trainerEmoji}</div>
             <div className="text-poke-gold text-sm font-bold mb-2">轮到</div>
@@ -125,14 +125,15 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
       )}
 
       {/* Top Bar */}
-      <div className="flex items-center justify-between px-3 py-2 bg-gray-900/80 border-b border-gray-700 shrink-0">
+      <div className="table-header">
         <button onClick={onBack} className="text-gray-400 hover:text-white text-sm px-2 py-1">
-          ← 退出
+          ← 返回
         </button>
-        <div className="text-center">
+        <div className="turn-heading">
+          <span className="table-brand">璀璨宝石 <span>宝可梦</span></span>
           <div className="text-xs text-gray-400">回合 {game.turnNumber}</div>
           <div className="text-sm font-bold">
-            当前: {player.trainerEmoji} {player.name}
+            当前: {currentPlayer.trainerEmoji} {currentPlayer.name}
             {isAIThinking && <span className="ml-2 animate-pulse">🤔 思考中...</span>}
           </div>
         </div>
@@ -152,7 +153,7 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
 
       {/* Message banner */}
       {message && (
-        <div className={`px-4 py-2 text-center text-sm font-bold animate-slide-up ${
+        <div role="status" className={`table-message px-4 py-2 text-center text-sm font-bold animate-slide-up ${
           messageType === 'error' ? 'bg-red-600/80' :
           messageType === 'success' ? 'bg-green-600/80' : 'bg-blue-600/60'
         }`}>
@@ -161,11 +162,11 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
       )}
 
       {/* Main game area */}
-      <div className="flex-1 overflow-auto p-2 md:p-4">
-        <div className="max-w-6xl mx-auto space-y-3">
+      <div className="table-main">
+        <div className="board-layout">
 
           {/* Opponents (expandable) */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+          <div className="opponents">
             {game.players.filter((p: PlayerState) => p.id !== player.id).map((p: PlayerState) => {
               const idx = game.players.indexOf(p);
               const isExpanded = expandedOpponent === p.id;
@@ -243,7 +244,8 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
           </div>
 
           {/* Special cards: Rare + Legendary */}
-          <div className="flex gap-3 justify-center">
+          <div className="special-market">
+            <h2 className="section-title">特别邂逅 <span>稀有 · 传说</span></h2>
             {game.board.rareRevealed && (
               <PokemonCardView
                 card={game.board.rareRevealed}
@@ -252,7 +254,7 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
                 onClick={() => isMyTurn && selectCard(game.board.rareRevealed!.id)}
                 onBuy={() => handleBuyCard(game.board.rareRevealed!, 'board')}
                 onReserve={() => handleReserveBoard(game.board.rareRevealed!)}
-                isMyTurn={isMyTurn}
+                isMyTurn={isMyTurn} evolutionPlayer={player}
                 compact
               />
             )}
@@ -264,21 +266,21 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
                 onClick={() => isMyTurn && selectCard(game.board.legendaryRevealed!.id)}
                 onBuy={() => handleBuyCard(game.board.legendaryRevealed!, 'board')}
                 onReserve={() => handleReserveBoard(game.board.legendaryRevealed!)}
-                isMyTurn={isMyTurn}
+                isMyTurn={isMyTurn} evolutionPlayer={player}
                 compact
               />
             )}
           </div>
 
           {/* Card Grid Lv3, Lv2, Lv1 */}
-          <div className="space-y-3">
+          <div id="card-market" className="card-market">
             {([3, 2, 1] as const).map(level => (
-              <div key={level}>
-                <div className="text-xs font-bold text-gray-500 mb-1 px-1">
+              <div key={level} className="market-tier" data-level={level}>
+                <div className="tier-heading">
                   {level === 3 ? '⭐ 高级 Lv.3' : level === 2 ? '⭐ 中级 Lv.2' : '⭐ 初级 Lv.1'}
                   <span className="ml-2 text-gray-600">牌堆: {game.board.decks[level].length}张</span>
                 </div>
-                <div className="flex gap-2 overflow-x-auto pb-2">
+                <div className="market-row">
                   {(game.board.revealed[level] || []).map((card: PokemonCard) => (
                     <PokemonCardView
                       key={card.id}
@@ -288,11 +290,11 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
                       onClick={() => isMyTurn && selectCard(card.id)}
                       onBuy={() => handleBuyCard(card, 'board')}
                       onReserve={() => handleReserveBoard(card)}
-                      isMyTurn={isMyTurn}
+                      isMyTurn={isMyTurn} evolutionPlayer={player}
                     />
                   ))}
                   {Array.from({ length: 4 - (game.board.revealed[level] || []).length }).map((_, i) => (
-                    <div key={`empty-${i}`} className="w-[90px] md:w-[110px] h-[140px] md:h-[160px] rounded-xl border-2 border-dashed border-gray-600 shrink-0 overflow-hidden opacity-60">
+                    <div key={`empty-${i}`} className="empty-card">
                       <img src={UI_ASSETS.cardBack} alt="" className="w-full h-full object-cover" />
                     </div>
                   ))}
@@ -302,14 +304,16 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
           </div>
 
           {/* Token Supply */}
-          <div className="rounded-xl p-3" style={{ background: `rgba(0,0,0,0.45) url(${UI_ASSETS.panelBg}) center/cover repeat, rgba(0,0,0,0.45)` }}>
-            <div className="text-xs font-bold text-gray-300 mb-2">精灵球供应区</div>
+          <div id="token-supply" className="token-supply">
+            <div className="section-title">精灵球供应区 <span>{actionMode === 'take_3' ? `已选 ${selectedTokens.length}/3 · 点击球后确认` : '先点击「拿3枚不同球」，再选择颜色'}</span></div>
             <div className="flex flex-wrap gap-2 justify-center">
               {ALL_COLORS.map(color => (
                 <button
                   key={color}
                   onClick={() => handleTokenClick(color)}
-                  disabled={game.tokenSupply[color] <= 0}
+                  disabled={game.tokenSupply[color] <= 0 || color === 'purple' || !isMyTurn || actionMode !== 'take_3'}
+                  aria-pressed={selectedTokens.includes(color)}
+                  title={color === 'purple' ? '大师球通过保留卡牌获得' : TOKEN_NAMES[color]}
                   className={`relative rounded-xl text-center transition-all ${
                     selectedTokens.includes(color)
                       ? 'ring-2 ring-poke-gold scale-110 shadow-lg shadow-poke-gold/30'
@@ -334,12 +338,18 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
       </div>
 
       {/* Player Dashboard (bottom) */}
-      <div className="shrink-0 border-t border-gray-700/50 p-3" style={{ background: `rgba(0,0,0,0.75) url(${UI_ASSETS.panelBg}) center/cover repeat, rgba(0,0,0,0.75)` }}>
-        <div className="max-w-6xl mx-auto space-y-3">
+      <div id="player-dashboard" className="player-dashboard">
+        <div className="dashboard-content">
+          <div className="trainer-summary">
+            <div className="section-title">训练家面板 <span>{isMyTurn ? '你的回合' : '等待对手'}</span></div>
+            <div className="trainer-score"><strong>{player.name}</strong><div><b>{player.score}</b><span> / {WIN_SCORE} 分</span></div></div>
+            <progress value={player.score} max={WIN_SCORE} aria-label="获胜分数进度" />
+            <p>{player.ownedCards.length} 只宝可梦 <span>·</span> {player.evolutionCount} 次进化 <span>·</span> {player.reservedCards.length}/{MAX_RESERVED} 张保留</p>
+          </div>
 
           {/* My tokens */}
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-xs text-gray-300 mr-1">我的精灵球:</span>
+          <div className="my-tokens">
+            <span className="text-xs text-gray-300 mr-1">我的精灵球</span>
             {ALL_COLORS.map(color => (
               <span key={color} className="text-sm bg-gray-900/60 rounded-lg px-1.5 py-0.5 flex items-center gap-1">
                 <img src={TOKEN_IMG[color]} alt="" className="w-5 h-5 object-contain" />
@@ -352,7 +362,7 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
           </div>
 
           {/* My bonuses */}
-          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          <div className="my-bonuses">
             <span className="text-gray-300">永久奖励:</span>
             {TOKEN_COLORS.map(color => (
               player.bonuses[color] > 0 && (
@@ -378,7 +388,7 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
                       isSelected={selectedCard === card.id}
                       onClick={() => isMyTurn && selectCard(card.id)}
                       onBuy={() => handleBuyCard(card, 'reserved')}
-                      isMyTurn={isMyTurn}
+                      isMyTurn={isMyTurn} evolutionPlayer={player}
                       compact
                       reserved
                     />
@@ -391,7 +401,7 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
           {/* My Pokémon (owned) */}
           <div>
             <div className="text-xs text-gray-400 mb-1">
-              我的宝可梦 ({player.ownedCards.length}只) | 分数: <span className="text-poke-gold font-bold text-lg">{player.score}</span>/18 | 进化: {player.evolutionCount}次
+              我的宝可梦 · {player.ownedCards.length} 只
             </div>
             <div className="flex gap-2 overflow-x-auto pb-1">
               {TOKEN_COLORS.map(color => {
@@ -416,7 +426,7 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
 
           {/* Action buttons */}
           {isMyTurn && !gameOver && (
-            <div className="flex flex-wrap gap-2">
+            <div className="action-buttons">
               {/* Take 3 different */}
               <button
                 onClick={() => setActionMode(actionMode === 'take_3' ? 'none' : 'take_3')}
@@ -424,7 +434,7 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
                   actionMode === 'take_3' ? 'bg-poke-gold text-poke-dark' : 'bg-gray-700 text-white hover:bg-gray-600'
                 }`}
               >
-                🔴🔵⚫ 拿3枚不同球
+                拿3枚不同球
               </button>
 
               {/* Take 2 same */}
@@ -438,7 +448,7 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
                       className="px-2 py-2 rounded-xl bg-gray-700 text-xs hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                       title={`拿2枚${TOKEN_NAMES[color]}`}
                     >
-                      {tokenEmoji(color)}×2
+                      <img src={TOKEN_IMG[color]} alt="" className="w-5 h-5 inline-block" /> ×2
                     </button>
                   ))}
                 </div>
@@ -459,7 +469,7 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
                   disabled={player.reservedCards.length >= MAX_RESERVED || game.tokenSupply.purple <= 0}
                   className="px-3 py-2 rounded-xl bg-gray-700 text-white text-xs font-bold hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                 >
-                  🃏 暗抽牌堆 +🟣
+                  从牌堆保留 + 大师球
                 </button>
                 {showReserveDeck && (
                   <div className="absolute bottom-full mb-1 left-0 bg-gray-800 rounded-xl p-2 flex gap-2 z-20 shadow-xl">
@@ -517,6 +527,7 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
                     </div>
                     <div className="text-xs mt-1 text-center text-purple-300">
                       {evo.from.name} → {evo.to.name}
+                      <EvolutionRequirement card={evo.to} player={player} detailed />
                     </div>
                   </button>
                 ))}
@@ -532,157 +543,14 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
         </div>
       </div>
 
+      <nav className="mobile-table-nav" aria-label="对局区域">
+        <a href="#card-market">卡牌市场</a><a href="#token-supply">拿取精灵球</a><a href="#player-dashboard">我的面板 · 操作</a>
+      </nav>
       {/* Rules Modal */}
       {showRules && <RulesModal onClose={() => setShowRules(false)} />}
 
       {/* Game Over Modal */}
       {gameOver && game.phase === 'finished' && <GameOverModal onBackToMenu={onBack} />}
-    </div>
-  );
-}
-
-// ============ Sub-components ============
-
-function PokemonCardView({
-  card, affordable, isSelected, onClick, onBuy, onReserve, isMyTurn, compact, reserved,
-}: {
-  card: PokemonCard;
-  affordable: boolean;
-  isSelected: boolean;
-  onClick: () => void;
-  onBuy: () => void;
-  onReserve?: () => void;
-  isMyTurn: boolean;
-  compact?: boolean;
-  reserved?: boolean;
-}) {
-  const [showActions, setShowActions] = useState(false);
-  const isSpecial = card.level === 'rare' || card.level === 'legendary';
-
-  const w = compact ? 'w-[100px]' : 'w-[110px] md:w-[130px]';
-  const h = compact ? 'h-[150px]' : 'h-[165px] md:h-[190px]';
-
-  return (
-    <div
-      className={`relative ${w} ${h} shrink-0 rounded-xl flex flex-col cursor-pointer transition-all select-none ${
-        isSelected ? 'ring-3 ring-poke-gold scale-105 z-10 shadow-xl shadow-poke-gold/30' : ''
-      } ${
-        isSpecial ? 'bg-gradient-to-b from-yellow-900/80 to-yellow-800/50 border-2 border-yellow-600' :
-        affordable ? 'bg-gray-700/80 border border-gray-600 hover:border-gray-500' :
-        'bg-gray-800/80 border border-gray-700 hover:border-gray-600'
-      } ${reserved ? 'border-blue-500/50' : ''}`}
-      onClick={() => { onClick(); if (isMyTurn) setShowActions(!showActions); }}
-    >
-      {/* Level badge */}
-      <div className={`absolute top-1 left-1 text-[10px] font-bold px-1.5 py-0.5 rounded-lg z-10 ${
-        isSpecial ? 'bg-yellow-500 text-black' :
-        card.level === 3 ? 'bg-red-600 text-white' :
-        card.level === 2 ? 'bg-blue-600 text-white' : 'bg-gray-600 text-white'
-      }`}>
-        {isSpecial ? (card.level === 'rare' ? '稀有' : '传说') : `Lv${card.level}`}
-      </div>
-
-      {/* Points */}
-      {card.points > 0 && (
-        <div className="absolute top-1 right-1 w-6 h-6 rounded-full bg-poke-gold text-poke-dark text-xs font-extrabold flex items-center justify-center z-10">
-          {card.points}
-        </div>
-      )}
-
-      {/* Pokémon image */}
-      <div className="flex-1 flex items-center justify-center p-2 pt-6">
-        <img
-          src={card.image}
-          alt={card.name}
-          className="w-full h-full object-contain drop-shadow-lg"
-          loading="lazy"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="80">⚡</text></svg>';
-          }}
-        />
-      </div>
-
-      {/* Card name */}
-      <div className="text-center text-[10px] md:text-xs font-bold px-1 truncate">
-        {card.name}
-      </div>
-
-      {/* Cost icons */}
-      <div className="flex justify-center gap-0.5 pb-1.5 text-xs">
-        {(['red','blue','black','pink','yellow'] as TokenColor[]).map(color => {
-          const cost = card.cost[color];
-          if (cost === 0) return null;
-          return (
-            <span key={color} className="inline-flex items-center gap-0.5 text-[10px]">
-              <img src={TOKEN_IMG[color]} className="w-4 h-4 object-contain" alt="" />
-              <span className="text-white/70">{cost}</span>
-            </span>
-          );
-        })}
-        {card.cost.purple > 0 && (
-          <span className="inline-flex items-center gap-0.5 text-[10px]">
-            <img src={TOKEN_IMG.purple} className="w-4 h-4 object-contain" alt="" />
-            <span className="text-purple-300">{card.cost.purple}</span>
-          </span>
-        )}
-      </div>
-
-      {/* Bonus indicator */}
-      <div className="absolute bottom-1 right-1 flex items-center gap-0.5 text-xs">
-        <img src={TOKEN_IMG[card.bonus]} className="w-4 h-4 object-contain drop-shadow" alt="" />
-        {card.bonusCount > 1 && <span className="text-[10px] text-poke-gold">×2</span>}
-      </div>
-
-      {/* Evolution badge */}
-      {card.evolutionOf && (
-        <div className="absolute top-1 left-12 z-10 px-1 py-0.5 rounded text-[9px] font-bold bg-purple-800/80 text-purple-200 border border-purple-600/40">
-          进化
-        </div>
-      )}
-
-      {/* Reserved indicator */}
-      {reserved && (
-        <div className="absolute top-0 left-0 right-0 bottom-0 bg-blue-900/20 rounded-xl flex items-center justify-center">
-          <span className="text-xs text-blue-300 font-bold bg-blue-900/60 px-2 py-1 rounded-lg">已预约</span>
-        </div>
-      )}
-
-      {/* Action overlay */}
-      {showActions && isMyTurn && !reserved && (
-        <div className="absolute inset-0 bg-black/85 rounded-xl flex flex-col items-center justify-center gap-1 z-20 p-1" onClick={e => e.stopPropagation()}>
-          {/* Evolution info */}
-          {card.evolutionOf && card.evolutionOfImage && (
-            <div className="flex items-center gap-1.5 bg-purple-900/40 rounded-lg px-2 py-1 mb-0.5 border border-purple-600/30">
-              <img src={card.evolutionOfImage} alt={card.evolutionOf} className="w-5 h-5 rounded-full object-cover border border-purple-500/40" />
-              <span className="text-[10px] text-purple-200">
-                进化自 <span className="text-purple-100 font-bold">{card.evolutionOf}</span>
-              </span>
-            </div>
-          )}
-          {affordable && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onBuy(); setShowActions(false); }}
-              className="px-3 py-1.5 bg-green-600 text-white text-xs font-bold rounded-lg hover:bg-green-500 transition-all"
-            >
-              💰 捕获
-            </button>
-          )}
-          {onReserve && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onReserve(); setShowActions(false); }}
-              className="px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-500 transition-all"
-            >
-              📋 保留 +🟣
-            </button>
-          )}
-          <button
-            onClick={(e) => { e.stopPropagation(); setShowActions(false); }}
-            className="px-3 py-1.5 bg-gray-600 text-white text-xs rounded-lg hover:bg-gray-500 transition-all"
-          >
-            ✕ 关闭
-          </button>
-        </div>
-      )}
     </div>
   );
 }

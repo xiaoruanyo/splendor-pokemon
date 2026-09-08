@@ -42,7 +42,7 @@ export function executeEvolution(
 
   player.ownedCards.push(evolution.to);
   player.bonuses[evolution.to.bonus] = (player.bonuses[evolution.to.bonus] || 0) + evolution.to.bonusCount;
-  player.score += evolution.to.points;
+  player.score += evolution.to.points - evolution.from.points;
   player.evolutionCount++;
 
   return { success: true, message: `${evolution.from.name} 进化成了 ${evolution.to.name}！` };

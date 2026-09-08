@@ -54,7 +54,7 @@ function easyAI(game: GameState, player: PlayerState): GameAction {
   // 3. Reserve (20%)
   if (roll < 0.55 && player.reservedCards.length < 3 && game.tokenSupply.purple > 0) {
     // Target high-point cards
-    const allVisible = getAllVisibleCards(game);
+    const allVisible = getAllVisibleCards(game).filter(card => card.level !== 'rare' && card.level !== 'legendary');
     if (allVisible.length > 0) {
       const sorted = [...allVisible].sort((a, b) => b.points - a.points);
       return {
@@ -108,7 +108,7 @@ function mediumAI(game: GameState, player: PlayerState): GameAction {
 
   // 3. Reserve a card that's close to affordable
   if (player.reservedCards.length < 3 && game.tokenSupply.purple > 0) {
-    const allVisible = getAllVisibleCards(game);
+    const allVisible = getAllVisibleCards(game).filter(card => card.level !== 'rare' && card.level !== 'legendary');
     // Find cards we're closest to affording
     const scored = allVisible.map(card => {
       const { shortage } = canAfford(card, player.tokens, player.bonuses);
