@@ -39,3 +39,9 @@ export function disconnectSocket(): void {
     socket = null;
   }
 }
+
+export function connectGuestSocket(guest: {name: string; avatar: string}): Socket {
+  disconnectSocket();
+  socket = io('/', { auth: { guest }, transports: ['websocket', 'polling'], reconnection: false });
+  return socket;
+}

@@ -1,0 +1,42 @@
+import assert from 'node:assert/strict';
+import {createServer} from 'node:http';
+import {createRequire} from 'node:module';
+import jwt from 'jsonwebtoken';
+import {createSocketServer} from '../src/socket/index.js';
+import {config} from '../src/config.js';
+const require=createRequire(import.meta.url);
+const {io:client}=require('../../node_modules/socket.io-client');
+const http=createServer();const io=createSocketServer(http);const clients:any[]=[];
+await new Promise<void>(resolve=>http.listen(0,'127.0.0.1',resolve));
+const address=http.address() as {port:number};
+const connect=(auth:object)=>new Promise<any>((resolve,reject)=>{
+  const s=client(`http://127.0.0.1:${address.port}`,{auth,reconnection:false});clients.push(s);
+  s.once('connect',()=>resolve(s));s.once('connect_error',reject);
+});
+const send=(s:any,event:string,data:unknown={})=>new Promise<any>((resolve,reject)=>s.timeout(3000).emit(event,data,(err:Error|null,res:unknown)=>err?reject(err):resolve(res)));
+try {
+  await assert.rejects(connect({}),/未登录/);
+  await assert.rejects(connect({guest:{name:' ',avatar:'forest'}}),/昵称/);
+  await assert.rejects(connect({guest:{name:'测试',avatar:'../bad'}}),/头像/);
+  const guests=[];for(let i=0;i<5;i++)guests.push(await connect({guest:{name:`访客${i}`,avatar:'forest'}}));
+  const {room}=await send(guests[0],'room:create',{maxPlayers:4});assert.match(room.roomId,/^\d{6}$/);
+  for(const s of guests.slice(1,4))assert((await send(s,'room:join',{roomId:room.roomId})).room);
+  assert.match((await send(guests[4],'room:join',{roomId:room.roomId})).error,/已满/);
+  assert.match((await send(guests[1],'game:start')).error,/房主/);
+  assert.match((await send(guests[0],'game:start')).error,/准备/);
+  guests[0].emit('room:leave');
+  await new Promise(r=>setTimeout(r,50));
+  const list=await send(guests[1],'room:list');assert.equal(list.rooms[0].hostId,guests[1].id);
+  guests.slice(1,4).forEach(s=>s.emit('room:ready',true));await new Promise(r=>setTimeout(r,50));
+  const started=new Promise<any>(resolve=>guests[1].once('game:started',resolve));
+  assert.equal((await send(guests[1],'game:start')).success,true);
+  const game=await started;assert.equal(game.players.length,3);assert(game.players.every((p:any)=>!p.userId));
+  assert.match((await send(guests[1],'game:start')).error,/已经开始/);
+  const turn=guests.find(s=>s.id===game.players[game.currentPlayerIndex].id);
+  assert.equal((await send(turn,'game:action',{type:'take_3_diff',tokens:{red:1,blue:1,black:1}})).success,true);
+  const account=await connect({token:jwt.sign({userId:'test-account',username:'账号玩家',avatar:'🧢'},config.jwtSecret)});
+  const accountRoom=(await send(account,'room:create',{maxPlayers:2})).room;assert.match(accountRoom.roomId,/^room_/);
+  assert.equal(accountRoom.players[0].userId,'test-account');
+  assert.match((await send(guests[4],'room:join',{roomId:accountRoom.roomId})).error,/对应的联机入口/);
+  console.log('PASS guest validation, room capacity, host transfer, ready/start permissions, actual game action and existing JWT entry');
+} finally {clients.forEach(s=>s.disconnect());await new Promise<void>(r=>io.close(()=>r()));}

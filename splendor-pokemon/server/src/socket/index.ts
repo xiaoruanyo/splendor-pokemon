@@ -22,6 +22,16 @@ export function createSocketServer(httpServer: HttpServer): Server {
 
   // Auth middleware
   io.use((socket, next) => {
+    const guest = socket.handshake.auth.guest;
+    if (guest) {
+      const name = typeof guest.name === 'string' ? guest.name.trim() : '';
+      const avatars = ['forest', 'ocean', 'flame', 'electric', 'moon', 'rock', 'ice', 'flower'];
+      if (!name || name.length > 16 || /[\x00-\x1f]/.test(name) || !avatars.includes(guest.avatar)) {
+        next(new Error('请输入 1–16 字昵称并选择头像')); return;
+      }
+      (socket as any).user = { username: name, avatar: `/assets/trainers/${guest.avatar}.webp`, guest: true };
+      next(); return;
+    }
     const token = socket.handshake.auth.token;
     if (!token) {
       next(new Error('未登录'));

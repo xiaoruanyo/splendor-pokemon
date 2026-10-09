@@ -1,8 +1,10 @@
+import { randomInt } from 'node:crypto';
 import type { Server, Socket } from 'socket.io';
 import type { RoomInfo } from '../engine/types.js';
 
 interface Room {
   roomId: string;
+  quick?: boolean;
   hostId: string;
   players: { id: string; socketId: string; name: string; avatar: string; userId?: string; ready: boolean }[];
   maxPlayers: number;
@@ -34,15 +36,23 @@ export function registerRoomHandlers(io: Server, socket: Socket): void {
       if (existing) {
         existing.players = existing.players.filter(p => p.socketId !== socket.id);
         if (existing.players.length === 0) rooms.delete(existing.roomId);
-        else io.to(existing.roomId).emit('room:updated', roomToInfo(existing));
+        else {
+          if (existing.hostId === socket.id) { existing.hostId = existing.players[0].socketId; existing.players[0].ready = true; }
+          io.to(existing.roomId).emit('room:updated', roomToInfo(existing));
+        }
+        socket.leave(existing.roomId);
       }
 
-      const roomId = `room_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+      let roomId = `room_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+      if (user.guest) {
+        do { roomId = String(randomInt(100000, 1000000)); } while (rooms.has(roomId));
+      }
       const room: Room = {
         roomId,
+        quick: !!user.guest,
         hostId: socket.id,
         players: [{ id: socket.id, socketId: socket.id, name: user.username, avatar: user.avatar, userId: user.userId, ready: true }],
-        maxPlayers: data.maxPlayers || 2,
+        maxPlayers: [2, 3, 4].includes(data?.maxPlayers) ? data.maxPlayers : 2,
         status: 'waiting',
       };
 
@@ -60,18 +70,22 @@ export function registerRoomHandlers(io: Server, socket: Socket): void {
       const user = (socket as any).user;
       if (!user) { callback?.({ error: '未登录' }); return; }
 
-      const room = rooms.get(data.roomId);
+      const room = rooms.get(typeof data?.roomId === 'string' ? data.roomId.trim() : '');
       if (!room) { callback?.({ error: '房间不存在' }); return; }
+      if (!!user.guest !== !!room.quick) { callback?.({ error: '请使用对应的联机入口加入该房间' }); return; }
       if (room.status !== 'waiting') { callback?.({ error: '游戏已开始' }); return; }
       if (room.players.length >= room.maxPlayers) { callback?.({ error: '房间已满' }); return; }
-      if (room.players.find(p => p.userId === user.userId)) { callback?.({ error: '已在房间中' }); return; }
+      if (room.players.find(p => p.socketId === socket.id || (user.userId && p.userId === user.userId))) { callback?.({ error: '已在房间中' }); return; }
 
       // Leave existing room
       const existing = getRoomByPlayer(socket.id);
       if (existing) {
         existing.players = existing.players.filter(p => p.socketId !== socket.id);
         if (existing.players.length === 0) rooms.delete(existing.roomId);
-        else io.to(existing.roomId).emit('room:updated', roomToInfo(existing));
+        else {
+          if (existing.hostId === socket.id) { existing.hostId = existing.players[0].socketId; existing.players[0].ready = true; }
+          io.to(existing.roomId).emit('room:updated', roomToInfo(existing));
+        }
         socket.leave(existing.roomId);
       }
 
@@ -93,7 +107,7 @@ export function registerRoomHandlers(io: Server, socket: Socket): void {
     if (room.players.length === 0) {
       rooms.delete(room.roomId);
     } else {
-      if (room.hostId === socket.id) room.hostId = room.players[0].socketId;
+      if (room.hostId === socket.id) { room.hostId = room.players[0].socketId; room.players[0].ready = true; }
       io.to(room.roomId).emit('room:updated', roomToInfo(room));
     }
   });
@@ -111,7 +125,7 @@ export function registerRoomHandlers(io: Server, socket: Socket): void {
   socket.on('room:list', (_data, callback) => {
     const list: RoomInfo[] = [];
     for (const room of rooms.values()) {
-      if (room.status === 'waiting') list.push(roomToInfo(room));
+      if (room.status === 'waiting' && !!room.quick === !!(socket as any).user?.guest) list.push(roomToInfo(room));
     }
     callback?.({ rooms: list });
   });
@@ -125,7 +139,7 @@ export function registerRoomHandlers(io: Server, socket: Socket): void {
     if (room.players.length === 0) {
       rooms.delete(room.roomId);
     } else {
-      if (room.hostId === socket.id) room.hostId = room.players[0].socketId;
+      if (room.hostId === socket.id) { room.hostId = room.players[0].socketId; room.players[0].ready = true; }
       io.to(room.roomId).emit('room:updated', roomToInfo(room));
     }
   });

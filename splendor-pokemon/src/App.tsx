@@ -1,3 +1,4 @@
+import QuickPlayScreen from './components/QuickPlayScreen';
 import { useState, useEffect, useCallback } from 'react';
 import { useGameStore } from './store/gameStore';
 import HomeScreen from './components/HomeScreen';
@@ -5,10 +6,9 @@ import GameScreen from './components/GameScreen';
 import LoginScreen from './components/LoginScreen';
 import LobbyScreen from './components/LobbyScreen';
 import OnlineGameScreen from './components/OnlineGameScreen';
-import AdminScreen from './components/AdminScreen';
 import { isLoggedIn, auth } from './network/api';
 
-type Screen = 'home' | 'login' | 'lobby' | 'game' | 'online_game' | 'admin';
+type Screen = 'quick' | 'home' | 'login' | 'lobby' | 'game' | 'online_game';
 
 export default function App() {
   const game = useGameStore(s => s.game);
@@ -20,6 +20,7 @@ export default function App() {
   const turnNumber = useGameStore(s => s.game?.turnNumber);
   const phase = useGameStore(s => s.game?.phase);
 
+  const [quickSession, setQuickSession] = useState(false);
   const [screen, setScreen] = useState<Screen>('home');
   const [user, setUser] = useState<{ id: string; username: string; avatar: string } | null>(null);
   const [onlineGameState, setOnlineGameState] = useState<any>(null);
@@ -106,15 +107,17 @@ export default function App() {
 
   const handleBackFromOnlineGame = useCallback(() => {
     setOnlineGameState(null);
-    setScreen('lobby');
-  }, []);
+    setScreen(quickSession ? 'quick' : 'lobby');
+  }, [quickSession]);
 
   return (
     <div className="min-h-screen bg-poke-dark">
       {screen === 'home' && (
         <HomeScreen
           onStartSolo={() => setScreen('game')}
+          onEnterQuick={() => { setQuickSession(true); setScreen('quick'); }}
           onEnterOnline={async () => {
+            setQuickSession(false);
             if (isLoggedIn()) {
               try {
                 const data = await auth.me();
@@ -127,9 +130,9 @@ export default function App() {
               setScreen('login');
             }
           }}
-          onEnterAdmin={() => setScreen('admin')}
         />
       )}
+      {screen === 'quick' && <QuickPlayScreen onBack={() => setScreen('home')} onStartGame={handleOnlineGameStart} />}
       {screen === 'login' && (
         <LoginScreen
           onLogin={handleLogin}
@@ -153,9 +156,6 @@ export default function App() {
           initialGameState={onlineGameState}
           onBackToLobby={handleBackFromOnlineGame}
         />
-      )}
-      {screen === 'admin' && (
-        <AdminScreen onBack={() => setScreen('home')} />
       )}
     </div>
   );

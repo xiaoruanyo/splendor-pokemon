@@ -221,3 +221,31 @@ button:focus-visible, input:focus-visible { outline: 3px solid #ecd19b; outline-
   .home-setup { padding: 16px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+
+/* Guest play is a separate entry alongside account-based online play. */
+.mode-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+.quick-page { min-height: 100dvh; padding: 28px 20px; color: #ecf2e7; background: radial-gradient(ellipse at top,#365246,#142921 80%); }
+.quick-panel { max-width: 650px; margin: 24px auto; padding: 32px; border: 1px solid #e4d2a433; background: #203b30; border-radius: 24px; box-shadow: 0 15px 50px #0003; }
+.quick-panel h1 { font-size: clamp(23px,4vw,32px); font-weight: 800; color: #f2dfb1; }
+.quick-subtitle { color: #b8c9bd; margin: 10px 0 24px; font-size: 14px; }
+.avatar-options { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; margin-bottom: 24px; }
+.avatar-options button { border: 2px solid transparent; border-radius: 14px; padding: 6px; background: #142d24; }
+.avatar-options button[aria-pressed=true] { border-color: #e4c88d; background: #4b5235; }
+.avatar-options img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 9px; }
+.avatar-options span { display: block; font-size: 12px; margin-top: 7px; }
+.quick-label { display: flex; flex-direction: column; gap: 8px; font-size: 14px; flex: 1; min-width: 0; }
+.quick-label input { width: 100%; background: #132b22; color: #f4f4e9; padding: 13px; border: 1px solid #728571; border-radius: 9px; }
+.quick-join { display: flex; align-items: flex-end; gap: 12px; margin-top: 20px; }
+.quick-join > button, .quick-create { padding: 14px 20px; background: #e4ce97; color: #203b2a; border-radius: 9px; font-weight: 800; }
+.quick-create { width: 100%; }
+.quick-panel button:disabled { opacity: .5; cursor: wait; }
+.quick-divider { text-align: center; margin: 20px 0; font-size: 12px; color: #aebfac; }
+.quick-back { color: #c6d0bc; padding: 10px; }
+.quick-error { color: #ffd0bb; background: #743e3544; padding: 12px; border-radius: 8px; margin: 12px 0; }
+.trainer-avatar { display: inline-block; width: 36px; height: 36px; object-fit: cover; border-radius: 50%; vertical-align: middle; }
+.room-code { display: flex; width: 100%; flex-direction: column; align-items: center; padding: 18px; background: #142c23; border-radius: 12px; }
+.room-code strong { font-size: 38px; letter-spacing: 8px; color: #efd7a4; }
+.quick-players { display: grid; gap: 12px; margin: 22px 0; }
+.quick-players > div { display: flex; align-items: center; gap: 12px; }
+.quick-players span { margin-left: auto; font-size: 13px; color: #c2cdaa; }
+@media(max-width:540px) { .mode-grid { grid-template-columns: 1fr; } .quick-panel { padding: 20px 14px; margin: 8px auto; } .quick-page { padding: 12px; } .avatar-options { gap: 5px; } .avatar-options span { font-size: 10px; } }

@@ -7,10 +7,11 @@ import RulesModal from './RulesModal';
 interface HomeScreenProps {
   onStartSolo: () => void;
   onEnterOnline: () => void;
+  onEnterQuick: () => void;
   onEnterAdmin?: () => void;
 }
 
-export default function HomeScreen({ onStartSolo, onEnterOnline, onEnterAdmin }: HomeScreenProps) {
+export default function HomeScreen({ onStartSolo, onEnterOnline, onEnterQuick, onEnterAdmin }: HomeScreenProps) {
   const startGame = useGameStore(s => s.startGame);
   const [mode, setMode] = useState<GameMode | null>(null);
   const [players, setPlayers] = useState<{
@@ -71,6 +72,11 @@ export default function HomeScreen({ onStartSolo, onEnterOnline, onEnterAdmin }:
       {/* Mode Selection */}
       {!mode ? (
         <div className="mode-grid">
+          <button onClick={onEnterQuick} className="quick-entry">
+            <div className="text-3xl mb-3">✦</div>
+            <div className="text-xl font-bold mb-1">快速加入</div>
+            <div className="text-sm opacity-80">选头像、填昵称，房间码一起玩 · 无需注册</div>
+          </button>
           <button
             onClick={() => {
               setMode('solo');

@@ -26,6 +26,7 @@ export function registerGameHandlers(io: Server, socket: Socket): void {
     try {
       const room = getRoomByPlayer(socket.id);
       if (!room) { callback?.({ error: '不在房间中' }); return; }
+      if (room.status !== 'waiting') { callback?.({ error: '游戏已经开始' }); return; }
       if (room.hostId !== socket.id) { callback?.({ error: '只有房主可以开始' }); return; }
       if (room.players.length < 2) { callback?.({ error: '至少需要2名玩家' }); return; }
       if (!room.players.every(p => p.ready)) { callback?.({ error: '有玩家未准备' }); return; }
@@ -188,6 +189,7 @@ export function registerGameHandlers(io: Server, socket: Socket): void {
 
 // Save game record to database
 async function saveGameRecord(game: GameState, players: any[]): Promise<void> {
+  if (players.some(p => !p.userId)) return; // Guest games do not create account statistics.
   try {
     const finalScores = game.rankings.map((p, i) => ({
       playerId: p.id,
