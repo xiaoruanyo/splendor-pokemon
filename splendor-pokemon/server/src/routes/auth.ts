@@ -9,7 +9,7 @@ import { validateCode, useCode } from '../services/activation.js';
 const router = Router();
 
 // 预设头像列表
-export const PRESET_AVATARS = ['🧢', '💧', '🪨', '🚀', '🎩', '🎀', '👒', '🔥', '⚡', '🌿', '👻'];
+import { PRESET_AVATARS } from '../avatars.js';
 
 // POST /api/auth/register
 router.post('/register', async (req: Request, res: Response) => {
@@ -46,7 +46,7 @@ router.post('/register', async (req: Request, res: Response) => {
     }
 
     // Validate avatar
-    const userAvatar = avatar && PRESET_AVATARS.includes(avatar) ? avatar : '🧢';
+    const userAvatar = avatar && PRESET_AVATARS.includes(avatar) ? avatar : PRESET_AVATARS[0];
 
     // Create user
     const passwordHash = await bcrypt.hash(password, 10);

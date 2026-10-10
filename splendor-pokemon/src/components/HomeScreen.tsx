@@ -1,3 +1,4 @@
+import TrainerAvatar from './TrainerAvatar';
 import { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { TRAINERS } from '../types/game';
@@ -17,8 +18,8 @@ export default function HomeScreen({ onStartSolo, onEnterOnline, onEnterQuick, o
   const [players, setPlayers] = useState<{
     name: string; trainer: string; trainerEmoji: string; isAI: boolean; aiDifficulty?: AIDifficulty;
   }[]>([
-    { name: '你', trainer: 'ash', trainerEmoji: '🧢', isAI: false },
-    { name: 'AI对手', trainer: 'misty', trainerEmoji: '💧', isAI: true, aiDifficulty: 'medium' },
+    { name: '你', trainer: 'forest', trainerEmoji: '/assets/trainers/forest.webp', isAI: false },
+    { name: 'AI对手', trainer: 'ocean', trainerEmoji: '/assets/trainers/ocean.webp', isAI: true, aiDifficulty: 'medium' },
   ]);
   const [showRules, setShowRules] = useState(false);
   const [aiDifficulty, setAiDifficulty] = useState<AIDifficulty>('medium');
@@ -33,14 +34,12 @@ export default function HomeScreen({ onStartSolo, onEnterOnline, onEnterQuick, o
   };
 
   const updatePlayer = (i: number, field: string, value: any) => {
-    const newPlayers = [...players];
-    (newPlayers[i] as any)[field] = value;
-    setPlayers(newPlayers);
+    setPlayers(current => current.map((player, index) => index === i ? { ...player, [field]: value } : player));
   };
 
   const addPlayer = () => {
     if (players.length < 4) {
-      const t = TRAINERS[players.length % 4];
+      const t = TRAINERS[players.length % TRAINERS.length];
       setPlayers([...players, {
         name: `玩家${players.length + 1}`,
         trainer: t.id,
@@ -81,8 +80,8 @@ export default function HomeScreen({ onStartSolo, onEnterOnline, onEnterQuick, o
             onClick={() => {
               setMode('solo');
               setPlayers([
-                { name: '你', trainer: 'ash', trainerEmoji: '🧢', isAI: false },
-                { name: '小霞', trainer: 'misty', trainerEmoji: '💧', isAI: true, aiDifficulty: 'medium' },
+                { name: '你', trainer: 'forest', trainerEmoji: '/assets/trainers/forest.webp', isAI: false },
+                { name: '小霞', trainer: 'ocean', trainerEmoji: '/assets/trainers/ocean.webp', isAI: true, aiDifficulty: 'medium' },
               ]);
             }}
             className="p-6 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-700 text-white text-left hover:scale-105 transition-transform shadow-xl"
@@ -95,8 +94,8 @@ export default function HomeScreen({ onStartSolo, onEnterOnline, onEnterQuick, o
             onClick={() => {
               setMode('local');
               setPlayers([
-                { name: '玩家1', trainer: 'ash', trainerEmoji: '🧢', isAI: false },
-                { name: '玩家2', trainer: 'misty', trainerEmoji: '💧', isAI: false },
+                { name: '玩家1', trainer: 'forest', trainerEmoji: '/assets/trainers/forest.webp', isAI: false },
+                { name: '玩家2', trainer: 'ocean', trainerEmoji: '/assets/trainers/ocean.webp', isAI: false },
               ]);
             }}
             className="p-6 rounded-2xl bg-gradient-to-br from-green-600 to-teal-700 text-white text-left hover:scale-105 transition-transform shadow-xl"
@@ -174,7 +173,7 @@ export default function HomeScreen({ onStartSolo, onEnterOnline, onEnterQuick, o
             {players.map((p, i) => (
               <div key={i} className="bg-gray-800/50 rounded-xl p-4">
                 <div className="flex items-center gap-3 mb-3">
-                  <span className="text-2xl">{p.trainerEmoji}</span>
+                  <span className="text-2xl"><TrainerAvatar avatar={p.trainerEmoji} /></span>
                   <span className="text-white font-bold">
                     {p.isAI ? `AI对手 ${i}` : `玩家 ${i + 1}`}
                   </span>
@@ -188,18 +187,20 @@ export default function HomeScreen({ onStartSolo, onEnterOnline, onEnterQuick, o
                     placeholder="输入名字"
                   />
                 )}
-                <div className="flex gap-2 mt-3">
+                <div className="grid grid-cols-4 gap-3 mt-3">
                   {TRAINERS.map(t => (
                     <button
                       key={t.id}
-                      onClick={() => { updatePlayer(i, 'trainer', t.id); updatePlayer(i, 'trainerEmoji', t.emoji); }}
-                      className={`w-10 h-10 rounded-full text-xl flex items-center justify-center transition-all ${
+                      onClick={() => setPlayers(current => current.map((player, index) => index === i ? { ...player, trainer: t.id, trainerEmoji: t.emoji } : player))}
+                      className={`w-full h-14 rounded-xl text-xl flex items-center justify-center transition-all ${
                         p.trainer === t.id ? 'ring-2 ring-poke-gold scale-110' : 'opacity-50 hover:opacity-80'
                       }`}
                       style={{ backgroundColor: t.color + '30' }}
                       title={t.name}
+                      aria-label={t.name}
+                      aria-pressed={p.trainer === t.id}
                     >
-                      {t.emoji}
+                      <TrainerAvatar avatar={t.emoji} size={48} />
                     </button>
                   ))}
                 </div>

@@ -1,14 +1,16 @@
+import { TRAINER_AVATARS, resolveAvatar } from '../data/trainers';
+import TrainerAvatar from './TrainerAvatar';
 import { useState } from 'react';
-import { PRESET_AVATARS } from '../network/api';
 
 interface AvatarPickerProps {
   currentAvatar: string;
+  error?: string;
   onSelect: (avatar: string) => void;
   onClose: () => void;
 }
 
-export default function AvatarPicker({ currentAvatar, onSelect, onClose }: AvatarPickerProps) {
-  const [selected, setSelected] = useState(currentAvatar);
+export default function AvatarPicker({ currentAvatar, onSelect, onClose, error }: AvatarPickerProps) {
+  const [selected, setSelected] = useState(resolveAvatar(currentAvatar));
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[60] p-4 animate-fade-in" onClick={onClose}>
@@ -16,21 +18,22 @@ export default function AvatarPicker({ currentAvatar, onSelect, onClose }: Avata
         <h3 className="text-white font-bold text-lg mb-4 text-center">选择头像</h3>
 
         <div className="grid grid-cols-4 gap-3 mb-6">
-          {PRESET_AVATARS.map(emoji => (
+          {TRAINER_AVATARS.map(({emoji, name}) => (
             <button
-              key={emoji}
+              key={emoji} aria-label={name} title={name} aria-pressed={resolveAvatar(selected) === emoji}
               onClick={() => setSelected(emoji)}
-              className={`w-14 h-14 rounded-xl text-2xl flex items-center justify-center transition-all ${
+              className={`w-full h-14 rounded-xl text-2xl flex items-center justify-center transition-all ${
                 selected === emoji
                   ? 'bg-poke-gold/20 ring-2 ring-poke-gold scale-110'
                   : 'bg-gray-700/50 hover:bg-gray-600'
               }`}
             >
-              {emoji}
+              <TrainerAvatar avatar={emoji} size={48} />
             </button>
           ))}
         </div>
 
+        {error && <p role="alert" className="text-red-300 text-sm mb-3">{error}</p>}
         <div className="flex gap-3">
           <button
             onClick={() => onSelect(selected)}

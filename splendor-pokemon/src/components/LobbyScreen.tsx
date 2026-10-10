@@ -1,3 +1,4 @@
+import TrainerAvatar from './TrainerAvatar';
 import { useState, useEffect, useCallback } from 'react';
 import { connectSocket, getSocket, disconnectSocket } from '../network/socket';
 import { users, clearToken } from '../network/api';
@@ -172,7 +173,7 @@ export default function LobbyScreen({ user, onStartGame, onLogout, onBackToSolo,
               <div key={p.id} className={`flex items-center gap-3 p-3 rounded-xl ${
                 p.id === room.hostId ? 'bg-poke-gold/10 border border-poke-gold/30' : 'bg-gray-700/40'
               }`}>
-                <span className="text-2xl">{p.avatar}</span>
+                <span className="text-2xl"><TrainerAvatar avatar={p.avatar} /></span>
                 <div className="flex-1">
                   <div className="text-white font-bold text-sm">
                     {p.name}
@@ -218,7 +219,7 @@ export default function LobbyScreen({ user, onStartGame, onLogout, onBackToSolo,
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <span className="text-3xl">{user.avatar}</span>
+            <span className="text-3xl"><TrainerAvatar avatar={user.avatar} /></span>
             <div>
               <div className="text-white font-bold text-lg">{user.username}</div>
               <div className="text-xs text-gray-400">在线大厅</div>
@@ -259,7 +260,7 @@ export default function LobbyScreen({ user, onStartGame, onLogout, onBackToSolo,
                     <span className={`font-bold w-6 ${
                       i === 0 ? 'text-poke-gold' : i === 1 ? 'text-gray-300' : i === 2 ? 'text-orange-400' : 'text-gray-500'
                     }`}>{entry.rank}</span>
-                    <span className="text-xl">{entry.avatar}</span>
+                    <span className="text-xl"><TrainerAvatar avatar={entry.avatar} /></span>
                     <span className="text-white flex-1">{entry.username}</span>
                     <span className="text-gray-400 text-xs">{entry.ratingElo} ELO</span>
                     <span className="text-gray-500 text-xs">{entry.wins}胜/{entry.totalGames - entry.wins}负</span>
@@ -298,7 +299,7 @@ export default function LobbyScreen({ user, onStartGame, onLogout, onBackToSolo,
                   </div>
                   <div className="flex gap-1 mt-1">
                     {r.players.map(p => (
-                      <span key={p.id} title={p.name} className="text-lg">{p.avatar}</span>
+                      <span key={p.id} title={p.name} className="text-lg"><TrainerAvatar avatar={p.avatar} /></span>
                     ))}
                   </div>
                 </div>

@@ -178,7 +178,7 @@ export default function OnlineGameScreen({ initialGameState, onBackToLobby }: On
       {turnPopup.show && (
         <div className="turn-toast animate-fade-in pointer-events-none">
           <div className="bg-gray-900/90 rounded-3xl px-10 py-8 shadow-2xl border border-poke-gold/40 animate-scale-in text-center">
-            <div className="text-6xl mb-4"><TrainerAvatar avatar={turnPopup.avatar} /></div>
+            <div className="text-6xl mb-4"><TrainerAvatar avatar={turnPopup.avatar} size={72} /></div>
             <div className="text-poke-gold text-sm font-bold mb-2">轮到</div>
             <div className="text-white text-3xl font-extrabold">{turnPopup.name}</div>
           </div>

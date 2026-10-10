@@ -1,3 +1,5 @@
+import { TRAINER_AVATARS, resolveAvatar } from '../data/trainers';
+import TrainerAvatar from './TrainerAvatar';
 import { useState } from 'react';
 import { auth, setToken, PRESET_AVATARS } from '../network/api';
 import { UI_ASSETS } from '../types/game';
@@ -12,7 +14,7 @@ export default function LoginScreen({ onLogin, onBack }: LoginScreenProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [activationCode, setActivationCode] = useState('');
-  const [selectedAvatar, setSelectedAvatar] = useState('🧢');
+  const [selectedAvatar, setSelectedAvatar] = useState(PRESET_AVATARS[0]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -113,19 +115,19 @@ export default function LoginScreen({ onLogin, onBack }: LoginScreenProps) {
           {mode === 'register' && (
             <div>
               <label className="text-xs text-gray-400 block mb-2">选择头像</label>
-              <div className="grid grid-cols-6 gap-2">
-                {PRESET_AVATARS.map(emoji => (
+              <div className="grid grid-cols-4 gap-2">
+                {TRAINER_AVATARS.map(({emoji, name}) => (
                   <button
-                    key={emoji}
+                    key={emoji} aria-label={name} title={name} aria-pressed={resolveAvatar(selectedAvatar) === emoji}
                     type="button"
                     onClick={() => setSelectedAvatar(emoji)}
-                    className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center transition-all ${
+                    className={`w-full h-14 rounded-xl text-xl flex items-center justify-center transition-all ${
                       selectedAvatar === emoji
                         ? 'bg-poke-gold/20 ring-2 ring-poke-gold scale-110'
                         : 'bg-gray-700/50 hover:bg-gray-600'
                     }`}
                   >
-                    {emoji}
+                    <TrainerAvatar avatar={emoji} size={48} />
                   </button>
                 ))}
               </div>

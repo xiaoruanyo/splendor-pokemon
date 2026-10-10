@@ -1,4 +1,6 @@
+import TrainerAvatar from './TrainerAvatar';
 import { useGameStore } from '../store/gameStore';
+import { TRAINERS } from '../types/game';
 import type { PlayerState } from '../types/game';
 
 export default function GameOverModal({ onBackToMenu }: { onBackToMenu: () => void }) {
@@ -35,7 +37,7 @@ export default function GameOverModal({ onBackToMenu }: { onBackToMenu: () => vo
             {winner!.name} 获胜！
           </h2>
           <p className="text-gray-400 text-sm">
-            {winner!.trainerEmoji} {winner!.trainer}
+            <TrainerAvatar avatar={winner!.trainerEmoji} /> {TRAINERS.find(t => t.id === winner!.trainer)?.name || '训练家'}
           </p>
         </div>
 
@@ -52,7 +54,7 @@ export default function GameOverModal({ onBackToMenu }: { onBackToMenu: () => vo
                 <span className={`text-xl font-bold ${i === 0 ? 'text-poke-gold' : 'text-gray-400'}`}>
                   #{i + 1}
                 </span>
-                <span className="text-2xl">{p.trainerEmoji}</span>
+                <span className="text-2xl"><TrainerAvatar avatar={p.trainerEmoji} /></span>
                 <div>
                   <div className="font-bold text-white">{p.name}</div>
                   <div className="text-xs text-gray-400">

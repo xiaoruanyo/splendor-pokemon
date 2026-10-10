@@ -1,3 +1,6 @@
+import { PRESET_AVATARS } from '../avatars.js';
+import jwt from 'jsonwebtoken';
+import { config } from '../config.js';
 import { Router, Request, Response } from 'express';
 import prisma from '../db.js';
 import { authMiddleware } from '../middleware/auth.js';
@@ -146,7 +149,7 @@ router.get('/:id/stats', async (req: Request, res: Response) => {
 router.put('/me/avatar', authMiddleware, async (req: Request, res: Response) => {
   try {
     const { avatar } = req.body;
-    if (!avatar || typeof avatar !== 'string') {
+    if (typeof avatar !== 'string' || !PRESET_AVATARS.includes(avatar)) {
       res.status(400).json({ error: '请选择头像' });
       return;
     }
@@ -156,7 +159,8 @@ router.put('/me/avatar', authMiddleware, async (req: Request, res: Response) => 
       data: { avatar },
     });
 
-    res.json({ success: true, avatar });
+    const token = jwt.sign({ userId: req.user!.userId, username: req.user!.username, avatar }, config.jwtSecret, { expiresIn: '7d' });
+    res.json({ success: true, avatar, token });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

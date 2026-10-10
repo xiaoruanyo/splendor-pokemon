@@ -37,6 +37,18 @@ try {
   const account=await connect({token:jwt.sign({userId:'test-account',username:'账号玩家',avatar:'🧢'},config.jwtSecret)});
   const accountRoom=(await send(account,'room:create',{maxPlayers:2})).room;assert.match(accountRoom.roomId,/^room_/);
   assert.equal(accountRoom.players[0].userId,'test-account');
+  const avatar = '/assets/trainers/ice.webp';
+  const refreshed = new Promise<any>((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error('Avatar refresh timed out')), 3000);
+    account.once('room:updated', (room: any) => { clearTimeout(timeout); resolve(room); });
+  });
+  account.emit('profile:refresh', {token: jwt.sign({userId:'test-account',username:'账号玩家',avatar},config.jwtSecret)});
+  assert.equal((await refreshed).players[0].avatar, avatar);
+  account.emit('profile:refresh', {token: jwt.sign({userId:'another-account',avatar:'/assets/trainers/flame.webp'},config.jwtSecret)});
+  // The acknowledged list request runs after the refresh on the same socket.
+  const afterInvalidRefresh = await send(account, 'room:list');
+  assert.equal(afterInvalidRefresh.rooms.find((r:any) => r.roomId === accountRoom.roomId).players[0].avatar, avatar);
+
   assert.match((await send(guests[4],'room:join',{roomId:accountRoom.roomId})).error,/对应的联机入口/);
   console.log('PASS guest validation, room capacity, host transfer, ready/start permissions, actual game action and existing JWT entry');
 } finally {clients.forEach(s=>s.disconnect());await new Promise<void>(r=>io.close(()=>r()));}

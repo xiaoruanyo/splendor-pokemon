@@ -43,12 +43,7 @@ export const UI_ASSETS = {
   token: TOKEN_IMG,
 } as const;
 
-export const TRAINERS = [
-  { id: 'ash', name: '小智', emoji: '🧢', color: '#3B7BBD' },
-  { id: 'misty', name: '小霞', emoji: '💧', color: '#F4A6B8' },
-  { id: 'brock', name: '小刚', emoji: '🪨', color: '#8B7355' },
-  { id: 'rocket', name: '火箭队', emoji: '🚀', color: '#EE3B33' },
-] as const;
+export { TRAINER_AVATARS as TRAINERS } from '../data/trainers';
 
 export interface TokenCost {
   [key: string]: number;

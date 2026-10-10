@@ -2,7 +2,7 @@ import { Server as HttpServer } from 'http';
 import { Server } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { config } from '../config.js';
-import { registerRoomHandlers } from './room.js';
+import { getRoomByPlayer, roomToInfo, registerRoomHandlers } from './room.js';
 import { registerGameHandlers } from './game.js';
 
 export function createSocketServer(httpServer: HttpServer): Server {
@@ -50,6 +50,20 @@ export function createSocketServer(httpServer: HttpServer): Server {
   io.on('connection', (socket) => {
     console.log(`玩家连接: ${(socket as any).user?.username} (${socket.id})`);
 
+    socket.on('profile:refresh', ({ token }: { token?: string } = {}) => {
+      try {
+        const payload = jwt.verify(token || '', config.jwtSecret) as any;
+        const user = (socket as any).user;
+        if (!user.userId || payload.userId !== user.userId) return;
+        user.avatar = payload.avatar;
+        const room = getRoomByPlayer(socket.id);
+        if (room && room.status === 'waiting') {
+          const player = room.players.find(p => p.socketId === socket.id);
+          if (player) player.avatar = payload.avatar;
+          io.to(room.roomId).emit('room:updated', roomToInfo(room));
+        }
+      } catch { /* Ignore invalid or expired refresh tokens. */ }
+    });
     registerRoomHandlers(io, socket);
     registerGameHandlers(io, socket);
 

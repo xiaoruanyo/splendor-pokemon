@@ -1,3 +1,5 @@
+import { getSocket } from '../network/socket';
+import TrainerAvatar from './TrainerAvatar';
 import { useState, useEffect } from 'react';
 import { users } from '../network/api';
 import AvatarPicker from './AvatarPicker';
@@ -21,6 +23,7 @@ export default function ProfileModal({ userId, currentAvatar, username, onAvatar
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [avatarError, setAvatarError] = useState('');
   const [avatar, setAvatar] = useState(currentAvatar);
 
   useEffect(() => {
@@ -36,12 +39,20 @@ export default function ProfileModal({ userId, currentAvatar, username, onAvatar
   }, [userId]);
 
   const handleAvatarChange = async (newAvatar: string) => {
+    setAvatarError('');
     try {
-      await users.updateAvatar(newAvatar);
+      const result = await users.updateAvatar(newAvatar);
+      localStorage.setItem('token', result.token);
+      const socket = getSocket();
+      if (socket) {
+        socket.auth = { token: result.token };
+        socket.emit('profile:refresh', { token: result.token });
+      }
       setAvatar(newAvatar);
       onAvatarChange(newAvatar);
     } catch {
-      // Ignore errors
+      setAvatarError('头像保存失败，请重试');
+      return;
     }
     setShowAvatarPicker(false);
   };
@@ -88,7 +99,7 @@ export default function ProfileModal({ userId, currentAvatar, username, onAvatar
                 className="w-16 h-16 rounded-2xl bg-gray-700 text-4xl flex items-center justify-center hover:bg-gray-600 transition-all shrink-0"
                 title="点击更换头像"
               >
-                {avatar}
+                <TrainerAvatar avatar={avatar} size={56} />
               </button>
               <div className="flex-1 min-w-0">
                 <div className="text-white font-bold text-lg truncate">{username}</div>
@@ -153,7 +164,7 @@ export default function ProfileModal({ userId, currentAvatar, username, onAvatar
                             }`}
                           >
                             <div className="flex items-center gap-2">
-                              <span className="text-base">{p.avatar}</span>
+                              <span className="text-base"><TrainerAvatar avatar={p.avatar} /></span>
                               <span className="text-gray-300">{p.username}</span>
                               {p.rank === 1 && <span className="text-yellow-400 text-xs">👑</span>}
                             </div>
@@ -186,6 +197,7 @@ export default function ProfileModal({ userId, currentAvatar, username, onAvatar
         {showAvatarPicker && (
           <AvatarPicker
             currentAvatar={avatar}
+            error={avatarError}
             onSelect={handleAvatarChange}
             onClose={() => setShowAvatarPicker(false)}
           />

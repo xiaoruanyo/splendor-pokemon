@@ -1,0 +1,1 @@
+export const PRESET_AVATARS: string[] = ['/assets/trainers/forest.webp', '/assets/trainers/ocean.webp', '/assets/trainers/flame.webp', '/assets/trainers/electric.webp', '/assets/trainers/moon.webp', '/assets/trainers/rock.webp', '/assets/trainers/ice.webp', '/assets/trainers/flower.webp'];

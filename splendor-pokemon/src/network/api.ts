@@ -1,7 +1,8 @@
+import { TRAINER_AVATARS } from '../data/trainers';
 const API_BASE = '/api';
 
 // 预设头像列表（与后端保持一致）
-export const PRESET_AVATARS = ['🧢', '💧', '🪨', '🚀', '🎩', '🎀', '👒', '🔥', '⚡', '🌿', '👻'];
+export const PRESET_AVATARS: string[] = TRAINER_AVATARS.map(a => a.emoji);
 
 export function getToken(): string | null {
   return localStorage.getItem('token');

@@ -145,7 +145,7 @@ export function registerRoomHandlers(io: Server, socket: Socket): void {
   });
 }
 
-function roomToInfo(room: Room): RoomInfo {
+export function roomToInfo(room: Room): RoomInfo {
   return {
     roomId: room.roomId,
     hostId: room.hostId,

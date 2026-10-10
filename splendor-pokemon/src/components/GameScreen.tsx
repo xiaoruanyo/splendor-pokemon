@@ -1,3 +1,4 @@
+import TrainerAvatar from './TrainerAvatar';
 import EvolutionRequirement from './EvolutionRequirement';
 import PokemonCardView from './PokemonCardView';
 import { useGameStore } from '../store/gameStore';
@@ -117,7 +118,7 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
       {turnPopup.show && (
         <div className="turn-toast animate-fade-in pointer-events-none">
           <div className="bg-gray-900/90 rounded-3xl px-10 py-8 shadow-2xl border border-poke-gold/40 animate-scale-in text-center">
-            <div className="text-6xl mb-4">{turnPopup.trainerEmoji}</div>
+            <div className="text-6xl mb-4"><TrainerAvatar avatar={turnPopup.trainerEmoji} size={72} /></div>
             <div className="text-poke-gold text-sm font-bold mb-2">轮到</div>
             <div className="text-white text-3xl font-extrabold">{turnPopup.name}</div>
           </div>
@@ -133,7 +134,7 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
           <span className="table-brand">璀璨宝石 <span>宝可梦</span></span>
           <div className="text-xs text-gray-400">回合 {game.turnNumber}</div>
           <div className="text-sm font-bold">
-            当前: {currentPlayer.trainerEmoji} {currentPlayer.name}
+            当前: <TrainerAvatar avatar={currentPlayer.trainerEmoji} /> {currentPlayer.name}
             {isAIThinking && <span className="ml-2 animate-pulse">🤔 思考中...</span>}
           </div>
         </div>
@@ -179,7 +180,7 @@ export default function GameScreen({ onBack }: { onBack: () => void }) {
                     }`}
                   >
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-lg">{p.trainerEmoji}</span>
+                      <span className="text-lg"><TrainerAvatar avatar={p.trainerEmoji} /></span>
                       <div>
                         <div className="font-bold text-xs">{p.name}</div>
                         <div className="text-poke-gold font-bold">{p.score}分</div>
